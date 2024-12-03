@@ -3,7 +3,6 @@
 #include "backend/editor.h"
 #include "frontend/renderer.h"
 #include "frontend/input_handler.h"
-#include <iostream>
 
 // Constructor
 Editor::Editor() : mode(Mode::NORMAL), cursor_x(0), cursor_y(0), filename(""), renderer(nullptr) {

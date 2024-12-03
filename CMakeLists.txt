@@ -1,7 +1,7 @@
 # CMakeLists.txt
 
 cmake_minimum_required(VERSION 3.14)
-project(VimLikeEditor)
+project(ViXX)
 
 # Set C++ standard to C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -23,7 +23,7 @@ set(SOURCES
 )
 
 # Add executable
-add_executable(vim_like_editor ${SOURCES})
+add_executable(vixx ${SOURCES})
 
 # Link ncurses
-target_link_libraries(vim_like_editor PRIVATE ${CURSES_LIBRARIES})
+target_link_libraries(vixx PRIVATE ${CURSES_LIBRARIES})
