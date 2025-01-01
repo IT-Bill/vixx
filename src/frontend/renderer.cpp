@@ -40,10 +40,6 @@ void Renderer::render(const Buffer& buffer, int cursor_x, int cursor_y, int top_
     for (int i = 0; i < screen_lines && i + top_line < static_cast<int>(lines.size()); ++i) {
         mvprintw(i, 0, "%4d: %s", i + top_line + 1, lines[i + top_line].c_str());
     }
-    // for (int i = 0; i < lines.size(); ++i) {
-    //     // Display line numbers (right-aligned in 4 spaces)
-    //     mvprintw(i, 0, "%4d: %s", i + 1, lines[i].c_str());
-    // }
 
     // Display status bar
     displayStatusBar(

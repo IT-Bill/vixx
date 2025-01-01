@@ -27,6 +27,13 @@ public:
     void moveCursorRight();
     void moveCursorUp();
     void moveCursorDown();
+    void jumpToLineStart();
+    void jumpToLineEnd();
+    void goToFirstLine();
+    void goToLastLine();
+    void deleteCurrentLine();
+    void copyCurrentLine();
+    void pasteContent();
 
     // Insert Mode Operations
     void insertCharacter(char c);
@@ -47,6 +54,7 @@ public:
     // Renderer Access
     Renderer& getRenderer();
 
+
 private:
     Buffer buffer;
     Mode mode;
@@ -55,6 +63,7 @@ private:
     int top_line;
     int window_start_line;  // Current window start line
     int window_height;      // Current window height
+    std::string copied_line;
     std::string filename;
     std::stack<Action> undo_stack;
     std::stack<Action> redo_stack;

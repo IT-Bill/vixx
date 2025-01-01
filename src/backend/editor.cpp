@@ -91,6 +91,65 @@ void Editor::moveCursorDown() {
     renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
 }
 
+// Jump to the beginning of the current line
+void Editor::jumpToLineStart() {
+    cursor_x = 0;
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
+}
+
+// Jump to the end of the current line
+void Editor::jumpToLineEnd() {
+    cursor_x = buffer.getLine(cursor_y).size();
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
+}
+
+// Go to the first line with the cursor at the beginning
+void Editor::goToFirstLine() {
+    cursor_y = 0;
+    cursor_x = 0;
+    adjustScrolling();
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
+}
+
+// Go to the last line with the cursor at the beginning
+void Editor::goToLastLine() {
+    cursor_y = buffer.getLineCount() - 1;
+    cursor_x = 0;
+    adjustScrolling();
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
+}
+
+// Delete the current line
+void Editor::deleteCurrentLine() {
+    buffer.deleteLine(cursor_y);
+    if (cursor_y >= buffer.getLineCount()) {
+        cursor_y = buffer.getLineCount() - 1; // Adjust if the cursor is beyond the last line
+    }
+    adjustScrolling();
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
+}
+
+// Copy the current line
+void Editor::copyCurrentLine() {
+    copied_line = buffer.getLine(cursor_y); // Save the current line to the clipboard
+}
+
+// Paste the copied content
+void Editor::pasteContent() {
+    if (!copied_line.empty()) {
+        std::string& current_line = buffer.getLine(cursor_y);
+        std::string before_cursor = current_line.substr(0, cursor_x);
+        std::string after_cursor = current_line.substr(cursor_x);
+
+        current_line = before_cursor + copied_line + after_cursor;
+        cursor_x += copied_line.size();
+
+        renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
+    }
+}
+
+
+
 // Insert Mode Operations
 void Editor::insertCharacter(char c) {
     buffer.insertChar(cursor_y, cursor_x, c);

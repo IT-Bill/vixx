@@ -54,7 +54,9 @@ public:
      * @param index The zero-based index of the line.
      * @return The content of the line. Returns an empty string if the index is invalid.
      */
-    std::string getLine(int index) const;
+    const std::string& getLine(int index) const;
+
+    std::string& getLine(int index);
 
     /**
      * @brief Returns the total number of lines in the buffer.

@@ -52,11 +52,19 @@ void Buffer::addLine(const std::string& line) {
 }
 
 // Retrieves the content of a specific line
-std::string Buffer::getLine(int index) const {
+const std::string& Buffer::getLine(int index) const {
+    static const std::string empty_line = "";
     if (index >= 0 && index < static_cast<int>(lines.size())) {
         return lines[index];
     }
-    return "";
+    return empty_line;
+}
+std::string& Buffer::getLine(int index) {
+    static std::string empty_line = "";
+    if (index >= 0 && index < static_cast<int>(lines.size())) {
+        return lines[index];
+    }
+    return empty_line;
 }
 
 // Returns the total number of lines in the buffer

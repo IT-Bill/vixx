@@ -30,6 +30,24 @@ void InputHandler::handleInput(int ch) {
 
 // Handle inputs in Normal mode
 void InputHandler::handleNormalMode(int ch) {
+    static int last_char = 0; // To track multi-character commands
+    bool done = false;
+
+    switch (last_char) {
+        case 'g':
+            if (ch == 'g') editor_ref.goToFirstLine();
+            done = true; break;
+        case 'd':
+            if (ch == 'd') editor_ref.deleteCurrentLine();
+            done = true; break;
+        case 'y':
+            if (ch == 'y') editor_ref.copyCurrentLine();
+            done = true; break;
+        default: break;
+    }
+    last_char = 0;
+    if (done) return;
+
     switch (ch) {
         case 'i':
             editor_ref.switchMode(Mode::INSERT);
@@ -56,8 +74,20 @@ void InputHandler::handleNormalMode(int ch) {
         case 'R':
             editor_ref.redo();
             break;
-        // Add more Normal mode commands as needed
+        case '0':
+            editor_ref.jumpToLineStart();
+            break;
+        case '$':
+            editor_ref.jumpToLineEnd();
+            break;
+        case 'G':
+            editor_ref.goToLastLine();
+            break;
+        case 'p':
+            editor_ref.pasteContent();
+            break;
         default:
+            last_char = ch;
             break;
     }
 }
