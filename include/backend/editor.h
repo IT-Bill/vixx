@@ -52,6 +52,9 @@ private:
     Mode mode;
     int cursor_x;
     int cursor_y;
+    int top_line;
+    int window_start_line;  // Current window start line
+    int window_height;      // Current window height
     std::string filename;
     std::stack<Action> undo_stack;
     std::stack<Action> redo_stack;
@@ -62,6 +65,8 @@ private:
     // Helper Methods
     void initialize();
     void shutdown();
+    void adjustScrolling();
+
 };
 
 #endif // EDITOR_H

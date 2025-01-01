@@ -5,7 +5,7 @@
 #include "frontend/input_handler.h"
 
 // Constructor
-Editor::Editor() : mode(Mode::NORMAL), cursor_x(0), cursor_y(0), filename(""), renderer(nullptr) {
+Editor::Editor() : mode(Mode::NORMAL), cursor_x(0), cursor_y(0), top_line(0), filename(""), renderer(nullptr) {
     initialize();
 }
 
@@ -41,7 +41,17 @@ void Editor::switchMode(Mode new_mode) {
     if (mode != Mode::COMMAND) {
         renderer->clearCommandLine();
     }
-    renderer->render(buffer, cursor_x, cursor_y, mode, filename);
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
+}
+
+// Adjust top_line for scrolling
+void Editor::adjustScrolling() {
+    int screen_lines = renderer->getScreenHeight() - 1; // Leave space for status bar
+    if (cursor_y < top_line) {
+        top_line = cursor_y; // Scroll up
+    } else if (cursor_y >= top_line + screen_lines) {
+        top_line = cursor_y - screen_lines + 1; // Scroll down
+    }
 }
 
 // Cursor Movement
@@ -49,14 +59,14 @@ void Editor::moveCursorLeft() {
     if (cursor_x > 0) {
         cursor_x--;
     }
-    renderer->render(buffer, cursor_x, cursor_y, mode, filename);
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
 }
 
 void Editor::moveCursorRight() {
     if (cursor_x < static_cast<int>(buffer.getLine(cursor_y).size())) {
         cursor_x++;
     }
-    renderer->render(buffer, cursor_x, cursor_y, mode, filename);
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
 }
 
 void Editor::moveCursorUp() {
@@ -65,8 +75,9 @@ void Editor::moveCursorUp() {
         if (cursor_x > static_cast<int>(buffer.getLine(cursor_y).size())) {
             cursor_x = buffer.getLine(cursor_y).size();
         }
+        adjustScrolling();
     }
-    renderer->render(buffer, cursor_x, cursor_y, mode, filename);
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
 }
 
 void Editor::moveCursorDown() {
@@ -75,8 +86,9 @@ void Editor::moveCursorDown() {
         if (cursor_x > static_cast<int>(buffer.getLine(cursor_y).size())) {
             cursor_x = buffer.getLine(cursor_y).size();
         }
+        adjustScrolling();
     }
-    renderer->render(buffer, cursor_x, cursor_y, mode, filename);
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
 }
 
 // Insert Mode Operations
@@ -91,7 +103,7 @@ void Editor::insertCharacter(char c) {
     undo_stack.push(action);
     // Update cursor position
     cursor_x++;
-    renderer->render(buffer, cursor_x, cursor_y, mode, filename);
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
 }
 
 void Editor::handleBackspace() {
@@ -124,7 +136,7 @@ void Editor::handleBackspace() {
         cursor_y--;
         cursor_x = prev_line_length;
     }
-    renderer->render(buffer, cursor_x, cursor_y, mode, filename);
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
 }
 
 void Editor::handleEnter() {
@@ -139,7 +151,7 @@ void Editor::handleEnter() {
     // Move to the new line
     cursor_y++;
     cursor_x = 0;
-    renderer->render(buffer, cursor_x, cursor_y, mode, filename);
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
 }
 
 // Command Execution
@@ -175,7 +187,7 @@ void Editor::executeCommand(const std::string& command) {
     }
     // Add more commands as needed
 
-    renderer->render(buffer, cursor_x, cursor_y, mode, filename);
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
 }
 
 // Undo/Redo Operations
@@ -212,7 +224,7 @@ void Editor::undo() {
 
     // Push the inverse action to redo stack
     redo_stack.push(action);
-    renderer->render(buffer, cursor_x, cursor_y, mode, filename);
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
 }
 
 void Editor::redo() {
@@ -248,7 +260,7 @@ void Editor::redo() {
 
     // Push the action back to undo stack
     undo_stack.push(action);
-    renderer->render(buffer, cursor_x, cursor_y, mode, filename);
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
 }
 
 // File Operations
@@ -258,7 +270,7 @@ void Editor::openFile(const std::string& fname) {
         // If file doesn't exist, start with an empty buffer
         buffer.addLine("");
     }
-    renderer->render(buffer, cursor_x, cursor_y, mode, filename);
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
 }
 
 void Editor::saveFile() {
@@ -269,7 +281,7 @@ void Editor::saveFile() {
     }
     buffer.saveToFile(filename);
     // Optionally, display a save confirmation in the status bar
-    renderer->render(buffer, cursor_x, cursor_y, mode, filename);
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename);
 }
 
 // Renderer Access

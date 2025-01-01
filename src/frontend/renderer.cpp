@@ -27,15 +27,23 @@ void Renderer::shutdown() {
     endwin();
 }
 
-void Renderer::render(const Buffer& buffer, int cursor_x, int cursor_y, Mode mode, const std::string& filename) {
+int Renderer::getScreenHeight() const {
+    return LINES; // Number of screen lines
+}
+
+void Renderer::render(const Buffer& buffer, int cursor_x, int cursor_y, int top_line, Mode mode, const std::string& filename) {
     clear();
 
     // Display buffer lines with line numbers
     const auto& lines = buffer.getLines();
-    for (int i = 0; i < lines.size(); ++i) {
-        // Display line numbers (right-aligned in 4 spaces)
-        mvprintw(i, 0, "%4d: %s", i + 1, lines[i].c_str());
+    int screen_lines = LINES - 1; // Reserve space for status bar
+    for (int i = 0; i < screen_lines && i + top_line < static_cast<int>(lines.size()); ++i) {
+        mvprintw(i, 0, "%4d: %s", i + top_line + 1, lines[i + top_line].c_str());
     }
+    // for (int i = 0; i < lines.size(); ++i) {
+    //     // Display line numbers (right-aligned in 4 spaces)
+    //     mvprintw(i, 0, "%4d: %s", i + 1, lines[i].c_str());
+    // }
 
     // Display status bar
     displayStatusBar(
@@ -44,8 +52,11 @@ void Renderer::render(const Buffer& buffer, int cursor_x, int cursor_y, Mode mod
         filename.empty() ? "[No Name]" : filename
     );
 
-    // Move cursor to the correct position
-    move(cursor_y, cursor_x + 6); // 5 spaces for line numbers and 1 for ':'
+    // Move cursor to the correct position (limited in display area)
+    int cursor_screen_y = cursor_y - top_line;
+    if (cursor_screen_y >= 0 && cursor_screen_y < screen_lines) {
+        move(cursor_screen_y, cursor_x + 6); // 6 spaces for line numbers and ':'
+    }
 
     refresh();
 }
