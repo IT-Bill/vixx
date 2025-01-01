@@ -22,4 +22,3 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-// vscode-github submit&push TEST, paperfish 12.27

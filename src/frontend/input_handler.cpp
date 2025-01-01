@@ -38,16 +38,16 @@ void InputHandler::handleNormalMode(int ch) {
             editor_ref.switchMode(Mode::COMMAND);
             command_buffer.clear();
             break;
-        case 'h':
+        case 'h': case 260:
             editor_ref.moveCursorLeft();
             break;
-        case 'j':
+        case 'j': case 258:
             editor_ref.moveCursorDown();
             break;
-        case 'k':
+        case 'k': case 259:
             editor_ref.moveCursorUp();
             break;
-        case 'l':
+        case 'l': case 261:
             editor_ref.moveCursorRight();
             break;
         case 'u':
