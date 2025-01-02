@@ -13,6 +13,7 @@ void Renderer::initialize() {
     noecho();               // Don't echo pressed keys
     keypad(stdscr, TRUE);   // Enable function keys and arrow keys
     curs_set(1);            // Show the cursor
+    set_escdelay(50);       // Set ESC latency (milliseconds)
 
     if (has_colors()) {
         start_color();

@@ -105,6 +105,18 @@ void InputHandler::handleInsertMode(int ch) {
         case '\n':
             editor_ref.handleEnter();
             break;
+        case 260:
+            editor_ref.moveCursorLeft();
+            break;
+        case 258:
+            editor_ref.moveCursorDown();
+            break;
+        case 259:
+            editor_ref.moveCursorUp();
+            break;
+        case 261:
+            editor_ref.moveCursorRight();
+            break;
         default:
             if (isprint(ch)) {
                 editor_ref.insertCharacter(static_cast<char>(ch));
