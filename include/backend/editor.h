@@ -18,6 +18,9 @@ public:
     Editor();
     ~Editor();
 
+    void refresh_render();
+    void clear_message();
+
     // Mode Management
     Mode getMode() const;
     void switchMode(Mode new_mode);
@@ -65,6 +68,7 @@ private:
     int window_height;      // Current window height
     std::string copied_line;
     std::string filename;
+    std::string message;
     std::stack<Action> undo_stack;
     std::stack<Action> redo_stack;
 

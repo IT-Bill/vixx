@@ -14,6 +14,7 @@ InputHandler::~InputHandler() {}
 
 // Handle input based on current mode
 void InputHandler::handleInput(int ch) {
+    editor_ref.clear_message();
     Mode current_mode = editor_ref.getMode();
     switch (current_mode) {
         case Mode::NORMAL:

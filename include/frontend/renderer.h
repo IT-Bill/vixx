@@ -16,11 +16,14 @@ public:
     void initialize();
     void shutdown();
 
-    void render(const Buffer& buffer, int cursor_x, int cursor_y, int top_line, Mode mode, const std::string& filename);
-    void displayStatusBar(const std::string& mode, const std::string& filename);
+    void render(const Buffer& buffer, int cursor_x, int cursor_y, int top_line, Mode mode, const std::string& filename, const std::string& message);
+    void displayStatusBar(const std::string& mode, const std::string& filename, const std::string& message);
     void displayCommandLine(const std::string& command);
     void clearCommandLine();
     int getScreenHeight() const;
+
+    void color_on(int order);
+    void color_off(int order);
 
 private:
     bool colors_initialized;
