@@ -25,6 +25,10 @@ public:
     Mode getMode() const;
     void switchMode(Mode new_mode);
 
+    std::string& getNumberBuffer();
+    void appendNumberBuffer(const char ch);
+    void clearNumberBuffer();
+
     // Cursor Movement
     void moveCursorLeft();
     void moveCursorRight();
@@ -34,6 +38,7 @@ public:
     void jumpToLineEnd();
     void goToFirstLine();
     void goToLastLine();
+    void jumpToLine(int target_line);
     void deleteCurrentLine();
     void copyCurrentLine();
     void pasteContent();
@@ -64,8 +69,9 @@ private:
     int cursor_x;
     int cursor_y;
     int top_line;
-    int window_start_line;  // Current window start line
-    int window_height;      // Current window height
+    int window_start_line;      // Current window start line
+    int window_height;          // Current window height
+    std::string number_buffer;  // To record digitally-guided commands
     std::string copied_line;
     std::string filename;
     std::string message;

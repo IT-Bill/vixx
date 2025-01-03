@@ -21,6 +21,7 @@ void Renderer::initialize() {
         init_pair(2, COLOR_YELLOW, COLOR_BLACK);  // Line number
         init_pair(3, COLOR_CYAN, COLOR_BLACK);    // Command
         init_pair(4, COLOR_WHITE, COLOR_RED);     // Message
+        init_pair(5, COLOR_BLUE, COLOR_BLACK);    // Coordinate
         colors_initialized = true;
     }
 }
@@ -33,7 +34,7 @@ int Renderer::getScreenHeight() const {
     return LINES; // Number of screen lines
 }
 
-void Renderer::render(const Buffer& buffer, int cursor_x, int cursor_y, int top_line, Mode mode, const std::string& filename, const std::string& message) {
+void Renderer::render(const Buffer& buffer, int cursor_x, int cursor_y, int top_line, Mode mode, const std::string& filename, const std::string& message, const std::string& number_buffer) {
     clear();
 
     // Display line numbers and buffer lines
@@ -51,7 +52,9 @@ void Renderer::render(const Buffer& buffer, int cursor_x, int cursor_y, int top_
         (mode == Mode::NORMAL) ? "NORMAL" : 
         (mode == Mode::INSERT) ? "INSERT" : "COMMAND",
         filename.empty() ? "[No Name]" : filename,
-        message
+        message,
+        number_buffer,
+        "("+std::to_string(cursor_y + 1)+", " + std::to_string(cursor_x + 1)+")"
     );
 
     // Move cursor to the correct position (limited in display area)
@@ -63,7 +66,7 @@ void Renderer::render(const Buffer& buffer, int cursor_x, int cursor_y, int top_
     refresh();
 }
 
-void Renderer::displayStatusBar(const std::string& mode, const std::string& filename, const std::string& message) {
+void Renderer::displayStatusBar(const std::string& mode, const std::string& filename, const std::string& message, const std::string& cmd_buf, const std::string& coor) {
     if (message.empty()) {
         color_on(1);
         mvprintw(LINES - 1, 0, "-- %s -- %s", mode.c_str(), filename.c_str());
@@ -73,6 +76,12 @@ void Renderer::displayStatusBar(const std::string& mode, const std::string& file
         mvprintw(LINES - 1, 0, "(%s)", message.c_str());
         color_off(4);
     }
+    color_on(3);
+    mvprintw(LINES - 1, COLS - coor.size() - cmd_buf.size() - 8, "%s", cmd_buf.c_str());
+    color_off(3);
+    color_on(5);
+    mvprintw(LINES - 1, COLS - coor.size() - 1, "%s", coor.c_str());
+    color_off(5);
 }
 
 void Renderer::displayCommandLine(const std::string& command) {

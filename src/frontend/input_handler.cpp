@@ -31,23 +31,30 @@ void InputHandler::handleInput(int ch) {
 
 // Handle inputs in Normal mode
 void InputHandler::handleNormalMode(int ch) {
-    static int last_char = 0; // To track multi-character commands
-    bool done = false;
+    static int last_char = 0;         // To track multi-character commands
 
-    switch (last_char) {
-        case 'g':
-            if (ch == 'g') editor_ref.goToFirstLine();
-            done = true; break;
-        case 'd':
-            if (ch == 'd') editor_ref.deleteCurrentLine();
-            done = true; break;
-        case 'y':
-            if (ch == 'y') editor_ref.copyCurrentLine();
-            done = true; break;
-        default: break;
+    if (last_char != 0) {
+        switch (last_char) {
+            case 'g':
+                if (ch == 'g') editor_ref.goToFirstLine();
+                break;
+            case 'd':
+                if (ch == 'd') editor_ref.deleteCurrentLine();
+                break;
+            case 'y':
+                if (ch == 'y') editor_ref.copyCurrentLine();
+                break;
+            default: break;
+        }
+        last_char = 0;
+        return;
     }
-    last_char = 0;
-    if (done) return;
+
+    if (isdigit(ch) && (!editor_ref.getNumberBuffer().empty() || ch != 0)) {   // The number_buffer cannot start with 0
+        editor_ref.appendNumberBuffer(static_cast<char>(ch));
+        editor_ref.refresh_render();
+        return;
+    }
 
     switch (ch) {
         case 'i':
@@ -82,7 +89,10 @@ void InputHandler::handleNormalMode(int ch) {
             editor_ref.jumpToLineEnd();
             break;
         case 'G':
-            editor_ref.goToLastLine();
+            if (!editor_ref.getNumberBuffer().empty()) // [number] + G
+                editor_ref.jumpToLine(std::stoi(editor_ref.getNumberBuffer()) - 1); // Line numbers start from 1
+            else
+                editor_ref.goToLastLine();
             break;
         case 'p':
             editor_ref.pasteContent();
@@ -91,6 +101,8 @@ void InputHandler::handleNormalMode(int ch) {
             last_char = ch;
             break;
     }
+    editor_ref.clearNumberBuffer();
+    editor_ref.refresh_render();
 }
 
 // Handle inputs in Insert mode

@@ -5,7 +5,7 @@
 #include "frontend/input_handler.h"
 
 // Constructor
-Editor::Editor() : mode(Mode::NORMAL), cursor_x(0), cursor_y(0), top_line(0), filename(""), message(""), renderer(nullptr) {
+Editor::Editor() : mode(Mode::NORMAL), cursor_x(0), cursor_y(0), top_line(0), filename(""), message(""), number_buffer(""), renderer(nullptr) {
     initialize();
 }
 
@@ -15,7 +15,7 @@ Editor::~Editor() {
 }
 
 void Editor::refresh_render() {
-    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename, message);
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename, message, number_buffer);
 }
 
 void Editor::clear_message() {
@@ -60,6 +60,16 @@ void Editor::adjustScrolling() {
     } else if (cursor_y >= top_line + screen_lines) {
         top_line = cursor_y - screen_lines + 1; // Scroll down
     }
+}
+
+std::string& Editor::getNumberBuffer() {
+    return number_buffer;
+}
+void Editor::appendNumberBuffer(const char ch) {
+    number_buffer += ch;
+}
+void Editor::clearNumberBuffer() {
+    number_buffer.clear();
 }
 
 // Cursor Movement
@@ -127,6 +137,18 @@ void Editor::goToLastLine() {
     refresh_render();
 }
 
+void Editor::jumpToLine(int target_line) {
+    if (target_line < 0) 
+        target_line = 0;
+    else if (target_line >= buffer.getLineCount())
+        target_line = buffer.getLineCount() - 1;
+    cursor_y = target_line;
+    cursor_x = 0;
+    adjustScrolling();
+    refresh_render();
+}
+
+
 // Delete the current line
 void Editor::deleteCurrentLine() {
     buffer.deleteLine(cursor_y);
@@ -151,11 +173,9 @@ void Editor::pasteContent() {
 
         current_line = before_cursor + copied_line + after_cursor;
         cursor_x += copied_line.size();
-
         refresh_render();
     }
 }
-
 
 
 // Insert Mode Operations
