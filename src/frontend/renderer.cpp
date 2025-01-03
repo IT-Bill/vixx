@@ -40,11 +40,33 @@ void Renderer::render(const Buffer& buffer, int cursor_x, int cursor_y, int top_
     // Display line numbers and buffer lines
     const auto& lines = buffer.getLines();
     int screen_lines = LINES - 1; // Reserve space for status bar
+    int screen_y = 0;   // Current screen line
+    int cy_pad = 0;
     for (int i = 0; i < screen_lines && i + top_line < static_cast<int>(lines.size()); ++i) {
-        color_on(2);
-        mvprintw(i, 0, "%4d", i + top_line + 1);
-        color_off(2);
-        mvprintw(i, 6, "%s", lines[i + top_line].c_str());
+        int logic_y = i + top_line + 1;
+        const std::string& logical_line = lines[i + top_line];
+        int line_length = logical_line.size();
+        int start = 0;
+        while (start < line_length && screen_y < screen_lines) {
+            // Render line number
+            if (start == 0) {   // Displays the line number of the logical line
+                color_on(2);
+                mvprintw(screen_y, 0, "%4d", logic_y);
+                color_off(2);
+            } else {            // Do NOT Displays the line number of the screen line
+                mvprintw(screen_y, 0, "     ");
+                if (logic_y <= cursor_y)
+                    ++cy_pad;
+            }
+            // Render text content
+            mvprintw(screen_y, 6, "%s", logical_line.substr(start, COLS - 6).c_str());
+            start += COLS - 6; // Skip the rendered characters
+            ++screen_y;        // Move to the next screen row
+        }
+        // color_on(2);
+        // mvprintw(i, 0, "%4d", i + top_line + 1);
+        // color_off(2);
+        // mvprintw(i, 6, "%s", lines[i + top_line].c_str());
     }
 
     // Display status bar
@@ -58,9 +80,11 @@ void Renderer::render(const Buffer& buffer, int cursor_x, int cursor_y, int top_
     );
 
     // Move cursor to the correct position (limited in display area)
-    int cursor_screen_y = cursor_y - top_line;
+    int cys = cursor_x / (COLS - 6);
+    int cursor_screen_x = (cursor_x % (COLS - 6)) + 6;
+    int cursor_screen_y = cursor_y - top_line + cy_pad + cys;
     if (cursor_screen_y >= 0 && cursor_screen_y < screen_lines) {
-        move(cursor_screen_y, cursor_x + 6); // 6 spaces for line numbers
+        move(cursor_screen_y, cursor_screen_x); // 6 spaces for line numbers
     }
 
     refresh();
