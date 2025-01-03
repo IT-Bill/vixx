@@ -63,10 +63,6 @@ void Renderer::render(const Buffer& buffer, int cursor_x, int cursor_y, int top_
             start += COLS - 6; // Skip the rendered characters
             ++screen_y;        // Move to the next screen row
         }
-        // color_on(2);
-        // mvprintw(i, 0, "%4d", i + top_line + 1);
-        // color_off(2);
-        // mvprintw(i, 6, "%s", lines[i + top_line].c_str());
     }
 
     // Display status bar
@@ -122,3 +118,5 @@ void Renderer::clearCommandLine() {
 
 void Renderer::color_on(int order) {if (colors_initialized) attron(COLOR_PAIR(order));}
 void Renderer::color_off(int order) {if (colors_initialized) attroff(COLOR_PAIR(order));}
+
+int Renderer::getCOLS() {return COLS;}

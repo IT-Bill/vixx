@@ -54,12 +54,14 @@ void Editor::switchMode(Mode new_mode) {
 
 // Adjust top_line for scrolling
 void Editor::adjustScrolling() {
-    int screen_lines = renderer->getScreenHeight() - 1; // Leave space for status bar
-    if (cursor_y < top_line) {
-        top_line = cursor_y; // Scroll up
-    } else if (cursor_y >= top_line + screen_lines) {
-        top_line = cursor_y - screen_lines + 1; // Scroll down
-    }
+    int screen_lines = renderer->getScreenHeight() - 1;
+    if (cursor_y < top_line) {  // Scroll up
+        top_line = cursor_y;
+    } else {    // Scroll down
+        int new_top = buffer.calculateTopLine(cursor_y, renderer->getCOLS(), screen_lines);
+        if (new_top > top_line)
+            top_line = new_top;
+    } 
 }
 
 std::string& Editor::getNumberBuffer() {

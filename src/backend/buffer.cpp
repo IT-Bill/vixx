@@ -158,3 +158,12 @@ void Buffer::replaceAll(int line_number, const std::string& old_str, const std::
 const std::vector<std::string>& Buffer::getLines() const {
     return lines;
 }
+
+int Buffer::calculateTopLine(int bottomLine, int COLS, int screen_lines) {
+    int topLine = bottomLine;
+    int occupy = (lines[topLine].size() / COLS) + 1;
+    while (occupy <= screen_lines) {
+        occupy += (lines[--topLine].size() / COLS) + 1;
+    }
+    return ++topLine;
+}

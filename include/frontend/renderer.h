@@ -25,6 +25,8 @@ public:
     void color_on(int order);
     void color_off(int order);
 
+    int getCOLS();
+
 private:
     bool colors_initialized;
 };

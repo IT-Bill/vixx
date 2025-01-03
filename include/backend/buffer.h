@@ -130,6 +130,8 @@ public:
      * @return A constant reference to the vector of lines.
      */
     const std::vector<std::string>& getLines() const;
+
+    int calculateTopLine(int bottomLine, int COLS, int screen_lines);
 };
 
 #endif // BUFFER_H
