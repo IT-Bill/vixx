@@ -30,10 +30,10 @@ public:
     void clearNumberBuffer();
 
     // Cursor Movement
-    void moveCursorLeft();
-    void moveCursorRight();
-    void moveCursorUp();
-    void moveCursorDown();
+    void moveCursorLeft(int t);
+    void moveCursorRight(int t);
+    void moveCursorUp(int t);
+    void moveCursorDown(int t);
     void jumpToLineStart();
     void jumpToLineEnd();
     void goToFirstLine();
@@ -41,7 +41,7 @@ public:
     void jumpToLine(int target_line);
     void deleteCurrentLine();
     void copyCurrentLine();
-    void pasteContent();
+    void pasteContent(int t);
 
     // Insert Mode Operations
     void insertCharacter(char c);

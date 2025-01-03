@@ -65,16 +65,16 @@ void InputHandler::handleNormalMode(int ch) {
             command_buffer.clear();
             break;
         case 'h': case 260:
-            editor_ref.moveCursorLeft();
+            editor_ref.moveCursorLeft(numOrElse1());
             break;
         case 'j': case 258:
-            editor_ref.moveCursorDown();
+            editor_ref.moveCursorDown(numOrElse1());
             break;
         case 'k': case 259:
-            editor_ref.moveCursorUp();
+            editor_ref.moveCursorUp(numOrElse1());
             break;
         case 'l': case 261:
-            editor_ref.moveCursorRight();
+            editor_ref.moveCursorRight(numOrElse1());
             break;
         case 'u':
             editor_ref.undo();
@@ -95,7 +95,7 @@ void InputHandler::handleNormalMode(int ch) {
                 editor_ref.goToLastLine();
             break;
         case 'p':
-            editor_ref.pasteContent();
+            editor_ref.pasteContent(numOrElse1());
             break;
         default:
             last_char = ch;
@@ -119,16 +119,16 @@ void InputHandler::handleInsertMode(int ch) {
             editor_ref.handleEnter();
             break;
         case 260:
-            editor_ref.moveCursorLeft();
+            editor_ref.moveCursorLeft(numOrElse1());
             break;
         case 258:
-            editor_ref.moveCursorDown();
+            editor_ref.moveCursorDown(numOrElse1());
             break;
         case 259:
-            editor_ref.moveCursorUp();
+            editor_ref.moveCursorUp(numOrElse1());
             break;
         case 261:
-            editor_ref.moveCursorRight();
+            editor_ref.moveCursorRight(numOrElse1());
             break;
         default:
             if (isprint(ch)) {
@@ -160,4 +160,9 @@ void InputHandler::handleCommandMode(int ch) {
             renderer.displayCommandLine(command_buffer);
         }
     }
+}
+
+int InputHandler::numOrElse1() {
+    if (editor_ref.getNumberBuffer().empty()) return 1;
+    else return std::stoi(editor_ref.getNumberBuffer());
 }

@@ -75,39 +75,38 @@ void Editor::clearNumberBuffer() {
 }
 
 // Cursor Movement
-void Editor::moveCursorLeft() {
-    if (cursor_x > 0) {
-        cursor_x--;
-    }
+void Editor::moveCursorLeft(int t) {
+    cursor_x -= t;
+    int min = 0;
+    if (cursor_x < min)
+        cursor_x = min;
     refresh_render();
 }
-
-void Editor::moveCursorRight() {
-    if (cursor_x < static_cast<int>(buffer.getLine(cursor_y).size())) {
-        cursor_x++;
-    }
+void Editor::moveCursorRight(int t) {
+    cursor_x += t;
+    int max = static_cast<int>(buffer.getLine(cursor_y).size());
+    if (cursor_x > max)
+        cursor_x = max;
     refresh_render();
 }
-
-void Editor::moveCursorUp() {
-    if (cursor_y > 0) {
-        cursor_y--;
-        if (cursor_x > static_cast<int>(buffer.getLine(cursor_y).size())) {
-            cursor_x = buffer.getLine(cursor_y).size();
-        }
-        adjustScrolling();
-    }
+void Editor::moveCursorUp(int t) {
+    cursor_y -= t;
+    int min = 0;
+    if (cursor_y < min)
+        cursor_y = min;
+    if (cursor_x > static_cast<int>(buffer.getLine(cursor_y).size()))
+        cursor_x = buffer.getLine(cursor_y).size();
+    adjustScrolling();
     refresh_render();
 }
-
-void Editor::moveCursorDown() {
-    if (cursor_y < buffer.getLineCount() - 1) {
-        cursor_y++;
-        if (cursor_x > static_cast<int>(buffer.getLine(cursor_y).size())) {
-            cursor_x = buffer.getLine(cursor_y).size();
-        }
-        adjustScrolling();
-    }
+void Editor::moveCursorDown(int t) {
+    cursor_y += t;
+    int max = buffer.getLineCount() - 1;
+    if (cursor_y > max)
+        cursor_y = max;
+    if (cursor_x > static_cast<int>(buffer.getLine(cursor_y).size()))
+        cursor_x = buffer.getLine(cursor_y).size();
+    adjustScrolling();
     refresh_render();
 }
 
@@ -167,14 +166,16 @@ void Editor::copyCurrentLine() {
 }
 
 // Paste the copied content
-void Editor::pasteContent() {
+void Editor::pasteContent(int t) {
     if (!copied_line.empty()) {
-        std::string& current_line = buffer.getLine(cursor_y);
-        std::string before_cursor = current_line.substr(0, cursor_x);
-        std::string after_cursor = current_line.substr(cursor_x);
+        for (int i = 0; i < t; ++i) {
+            std::string& current_line = buffer.getLine(cursor_y);
+            std::string before_cursor = current_line.substr(0, cursor_x);
+            std::string after_cursor = current_line.substr(cursor_x);
 
-        current_line = before_cursor + copied_line + after_cursor;
-        cursor_x += copied_line.size();
+            current_line = before_cursor + copied_line + after_cursor;
+            cursor_x += copied_line.size();
+        }
         refresh_render();
     }
 }

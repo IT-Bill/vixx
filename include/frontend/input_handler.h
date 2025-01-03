@@ -22,6 +22,7 @@ private:
     void handleNormalMode(int ch);
     void handleInsertMode(int ch);
     void handleCommandMode(int ch);
+    int numOrElse1();
 };
 
 #endif // INPUT_HANDLER_H
