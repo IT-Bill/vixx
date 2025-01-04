@@ -226,6 +226,7 @@ void Editor::handleBackspace() {
         cursor_y--;
         cursor_x = prev_line_length;
     }
+    adjustScrolling();
     refresh_render();
 }
 
@@ -241,6 +242,7 @@ void Editor::handleEnter() {
     // Move to the new line
     cursor_y++;
     cursor_x = 0;
+    adjustScrolling();
     refresh_render();
 }
 

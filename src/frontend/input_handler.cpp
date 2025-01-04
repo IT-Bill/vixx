@@ -50,7 +50,7 @@ void InputHandler::handleNormalMode(int ch) {
         return;
     }
 
-    if (isdigit(ch) && (!editor_ref.getNumberBuffer().empty() || ch != 0)) {   // The number_buffer cannot start with 0
+    if (isdigit(ch) && (!editor_ref.getNumberBuffer().empty() || ch != '0')) {   // The number_buffer cannot start with 0
         editor_ref.appendNumberBuffer(static_cast<char>(ch));
         editor_ref.refresh_render();
         return;
