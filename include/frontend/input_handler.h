@@ -4,7 +4,6 @@
 #define INPUT_HANDLER_H
 
 #include <string>
-#include "common/types.h"
 
 class Editor; // Forward declaration
 

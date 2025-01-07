@@ -5,8 +5,7 @@
 
 #include <vector>
 #include <string>
-#include <fstream>
-#include <algorithm>
+
 
 /**
  * @brief The Buffer class manages the text data of the editor.

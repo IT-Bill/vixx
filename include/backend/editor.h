@@ -4,7 +4,6 @@
 #define EDITOR_H
 
 #include <string>
-#include <vector>
 #include <stack>
 #include <ncurses.h>
 #include "common/types.h"

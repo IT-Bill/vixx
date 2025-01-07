@@ -1,6 +1,7 @@
 // src/backend/buffer.cpp
 
 #include "backend/buffer.h"
+#include <fstream>
 
 // Constructor: Initializes the buffer with a single empty line
 Buffer::Buffer() {

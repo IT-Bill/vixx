@@ -7,7 +7,9 @@
 #include <cctype>
 
 // Constructor
-InputHandler::InputHandler(Editor& editor) : editor_ref(editor), command_buffer("") {}
+InputHandler::InputHandler(Editor& editor) : editor_ref(editor), command_buffer("") {
+    editor_ref.refresh_render();
+}
 
 // Destructor
 InputHandler::~InputHandler() {}

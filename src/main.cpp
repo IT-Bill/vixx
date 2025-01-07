@@ -1,8 +1,7 @@
 // src/main.cpp
 
-#include "../include/backend/editor.h"
-#include "../include/frontend/input_handler.h"
-#include <iostream>
+#include "backend/editor.h"
+#include "frontend/input_handler.h"
 
 int main(int argc, char* argv[]) {
     Editor editor;

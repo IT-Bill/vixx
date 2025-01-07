@@ -27,7 +27,7 @@ void Editor::initialize() {
     renderer = new Renderer();
     renderer->initialize();
     // Initialize buffer with at least one empty line
-    buffer.addLine("");
+    // buffer.addLine("");
 }
 
 // Shutdown the editor and renderer
@@ -357,7 +357,7 @@ void Editor::openFile(const std::string& fname) {
     filename = fname;
     if (!buffer.loadFromFile(fname)) {
         // If file doesn't exist, start with an empty buffer
-        buffer.addLine("");
+        // buffer.addLine("");
     }
     refresh_render();
 }
