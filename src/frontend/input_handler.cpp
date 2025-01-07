@@ -59,6 +59,9 @@ void InputHandler::handleNormalMode(int ch) {
     }
 
     switch (ch) {
+        case 27: // ESC key
+            break;
+
         case 'i':
             editor_ref.switchMode(Mode::INSERT);
             break;
