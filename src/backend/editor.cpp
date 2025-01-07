@@ -3,6 +3,9 @@
 #include "backend/editor.h"
 #include "frontend/renderer.h"
 #include "frontend/input_handler.h"
+#include "common/utils.h"
+#include <stdexcept>
+#include <string>
 
 // Constructor
 Editor::Editor() : mode(Mode::NORMAL), cursor_x(0), cursor_y(0), top_line(0), filename(""), message(""), number_buffer(""), renderer(nullptr) {
@@ -248,17 +251,31 @@ void Editor::handleEnter() {
 
 // Command Execution
 void Editor::executeCommand(const std::string& command) {
-    if (command == "w") {
-        saveFile();
+    // split the command into parts
+    std::vector<std::string> parts = split(command, 1);
+
+    // process the write command with optional filename
+    if (parts[0] == "w") {
+        try {
+            saveFile(parts.size() > 1 ? parts[1] : "");
+        } catch (const std::runtime_error& e) {
+            message = e.what();
+        }
     }
-    else if (command == "q") {
+    else if (parts[0] == "q") {
         shutdown();
         exit(0);
     }
-    else if (command == "wq") {
-        saveFile();
-        shutdown();
-        exit(0);
+    // process the write command with optional filename
+    else if (parts[0] == "wq") {
+        try {
+            saveFile(parts.size() > 1 ? parts[1] : "");
+            shutdown();
+            exit(0);
+        } catch (const std::runtime_error& e) {
+            message = e.what();
+        }
+
     }
     else if (command.rfind("s/", 0) == 0) { // s/old/new/g
         size_t pref = 1;
@@ -272,9 +289,11 @@ void Editor::executeCommand(const std::string& command) {
             }
             // Optionally, record replace action for undo
             refresh_render();
-        } else message = "Insufficient parameter";
+        } else {
+            message = "Insufficient parameter";
+        }
     } else {
-        message = "Not an editor command: "+command;
+        message = "Not an editor command: " + command;
     }
     // Add more commands as needed
 }
@@ -362,11 +381,11 @@ void Editor::openFile(const std::string& fname) {
     refresh_render();
 }
 
-void Editor::saveFile() {
-    if (filename.empty()) {
-        // Prompt for filename if not set
-        // For simplicity, we'll assume filename is set
-        return;
+void Editor::saveFile(const std::string& fname) {
+    if (filename.empty() && fname.empty()) {
+        throw std::runtime_error("No filename specified");
+    } else if (!fname.empty()) {
+        filename = fname;
     }
     buffer.saveToFile(filename);
     // Optionally, display a save confirmation in the status bar

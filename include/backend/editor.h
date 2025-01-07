@@ -56,7 +56,7 @@ public:
 
     // File Operations
     void openFile(const std::string& fname);
-    void saveFile();
+    void saveFile(const std::string& fname = "");
 
     // Renderer Access
     Renderer& getRenderer();
