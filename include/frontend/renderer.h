@@ -4,9 +4,8 @@
 #define RENDERER_H
 
 #include <string>
-#include <vector>
 #include "common/types.h"
-#include "../backend/buffer.h"
+#include "backend/buffer.h"
 
 class Renderer {
 public:

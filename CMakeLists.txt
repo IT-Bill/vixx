@@ -16,9 +16,11 @@ include_directories(include)
 # Source files
 file(GLOB BACKEND_SOURCES "src/backend/*.cpp")
 file(GLOB FRONTEND_SOURCES "src/frontend/*.cpp")
+file(GLOB COMMON_SOURCES "src/common/*.cpp")
 set(SOURCES
     ${BACKEND_SOURCES}
     ${FRONTEND_SOURCES}
+    ${COMMON_SOURCES}
     src/main.cpp
 )
 

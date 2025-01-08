@@ -65,7 +65,7 @@ void Renderer::render(const Buffer& buffer, int cursor_x, int cursor_y, int top_
     displayStatusBar(
         (mode == Mode::NORMAL) ? "-- NORMAL --" : 
         (mode == Mode::INSERT) ? ">> INSERT <<" : ":: COMMAND ::",
-        filename.empty() ? "[No Name]" : "\""+filename+"\", "+std::to_string(lines.size())+"L",
+        filename.empty() ? "[No Name]" : "\""  +filename+"\", " + std::to_string(lines.size())+"L",
         message,
         number_buffer,
         "("+std::to_string(cursor_y + 1)+", " + std::to_string(cursor_x + 1)+")"
