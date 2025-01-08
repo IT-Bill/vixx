@@ -252,7 +252,7 @@ void Editor::handleEnter() {
 // Command Execution
 void Editor::executeCommand(const std::string& command) {
     // split the command into parts
-    std::vector<std::string> parts = split(command, 1);
+    std::vector<std::string> parts = split(command, 2);
 
     // process the write command with optional filename
     if (parts[0] == "w") {
