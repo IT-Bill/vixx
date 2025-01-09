@@ -372,7 +372,6 @@ void Editor::undo() {
         buffer.insertLine(action.line, action.text);
         cursor_y = action.line;
         cursor_x = 0;
-        message = "UNDO: Deleted line restored " + std::to_string(action.line);
         break;
 
     case Action::REPLACE:
