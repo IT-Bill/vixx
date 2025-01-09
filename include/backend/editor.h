@@ -6,8 +6,8 @@
 #include "backend/buffer.h"
 #include "common/types.h"
 #include <ncurses.h>
-#include <stack>
 #include <string>
+#include <vector>
 
 class Renderer;     // Forward declaration
 class InputHandler; // Forward declaration
@@ -17,12 +17,25 @@ class Editor {
     Editor();
     ~Editor();
 
+    void initialize();
+    void shutdown();
+    void adjustScrolling();
+
     void refresh_render();
     void clear_message();
 
     // Mode Management
     Mode getMode() const;
     void switchMode(Mode new_mode);
+
+    // Multi-file management
+    void openFile(const std::string &fname);   // :e <fname>
+    void switchBuffer(int index);              // :buffer <n>
+    void listBuffers();                        // :ls
+
+    // Current buffer convenience
+    Buffer &currentBuffer();
+    const Buffer &currentBuffer() const;
 
     std::string& getNumberBuffer();
     void appendNumberBuffer(const char ch);
@@ -55,34 +68,28 @@ class Editor {
     void redo();
 
     // File Operations
-    void openFile(const std::string& fname);
     void saveFile(const std::string& fname = "");
 
     // Renderer Access
     Renderer& getRenderer();
 
   private:
-    Buffer buffer;
+    std::vector<Buffer> buffers;
+    int current_buffer_index;
+    
     Mode mode;
-    int cursor_x;
-    int cursor_y;
-    int top_line;
+
     int window_start_line;     // Current window start line
     int window_height;         // Current window height
+
     std::string number_buffer; // To record digitally-guided commands
     std::string copied_line;
-    std::string filename;
     std::string message;
-    std::stack<Action> undo_stack;
-    std::stack<Action> redo_stack;
 
     Renderer* renderer; // Pointer to Renderer instance
     // InputHandler can be managed separately
 
-    // Helper Methods
-    void initialize();
-    void shutdown();
-    void adjustScrolling();
+    
 };
 
 #endif // EDITOR_H
