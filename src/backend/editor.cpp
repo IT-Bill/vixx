@@ -9,23 +9,14 @@
 
 // Constructor
 Editor::Editor()
-    : mode(Mode::NORMAL), cursor_x(0), cursor_y(0), top_line(0), filename(""),
-      message(""), number_buffer(""), renderer(nullptr) {
+    : mode(Mode::NORMAL), message(""), number_buffer(""),
+      current_buffer_index(0), renderer(nullptr) {
     initialize();
 }
 
 // Destructor
 Editor::~Editor() {
     shutdown();
-}
-
-void Editor::refresh_render() {
-    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename,
-                     message, number_buffer);
-}
-
-void Editor::clear_message() {
-    message = "";
 }
 
 // Initialize the editor (including the renderer)
@@ -45,6 +36,34 @@ void Editor::shutdown() {
     }
 }
 
+// Adjust top_line for scrolling
+void Editor::adjustScrolling() {
+    int screen_lines = renderer->getScreenHeight() - 1;
+
+    if (currentBuffer().getCursorY() < currentBuffer().getTopLine()) {
+        // Scroll up
+        currentBuffer().setTopLine(currentBuffer().getCursorY());
+    } else {
+        // Scroll down
+        int new_top = currentBuffer().calculateTopLine(
+            currentBuffer().getCursorY(), renderer->getCOLS(), screen_lines);
+        if (new_top > currentBuffer().getTopLine()) {
+            currentBuffer().setTopLine(new_top);
+        }
+    }
+}
+
+void Editor::refresh_render() {
+    // Pull out references from the active buffer
+    Buffer& buf = currentBuffer();
+    renderer->render(buf, buf.getCursorX(), buf.getCursorY(), buf.getTopLine(),
+                     mode, buf.getFilename(), message, number_buffer);
+}
+
+void Editor::clear_message() {
+    message = "";
+}
+
 // Mode Management
 Mode Editor::getMode() const {
     return mode;
@@ -58,20 +77,51 @@ void Editor::switchMode(Mode new_mode) {
     refresh_render();
 }
 
-// Adjust top_line for scrolling
-void Editor::adjustScrolling() {
-    int screen_lines = renderer->getScreenHeight() - 1;
-    if (cursor_y < top_line) { // Scroll up
-        top_line = cursor_y;
-    } else { // Scroll down
-        int new_top = buffer.calculateTopLine(cursor_y, renderer->getCOLS(),
-                                              screen_lines);
-        if (new_top > top_line)
-            top_line = new_top;
+// Create a new buffer, or load existing file
+void Editor::openFile(const std::string& fname) {
+    Buffer buf;
+    if (!fname.empty()) {
+        buf.setFilename(fname);
+        buf.loadFromFile(fname);
+    }
+    buffers.push_back(buf);
+    current_buffer_index = (int)buffers.size() - 1;
+    refresh_render();
+}
+
+// Switch to a different buffer by index
+void Editor::switchBuffer(int index) {
+    if (index >= 0 && index < (int)buffers.size()) {
+        current_buffer_index = index;
+        refresh_render();
+    } else {
+        message = "Invalid buffer number";
+        refresh_render();
     }
 }
 
-std::string &Editor::getNumberBuffer() {
+// List all buffers
+void Editor::listBuffers() {
+    clear_message();
+    message = "Buffers:\n";
+    for (int i = 0; i < (int)buffers.size(); ++i) {
+        message +=
+            std::to_string(i + 1) + ": " + buffers[i].getFilename() + "\n";
+    }
+    // Potentially use your renderer to display or just store in 'message'
+    // We'll store in 'message' for simplicity:
+    refresh_render();
+}
+
+Buffer& Editor::currentBuffer() {
+    // Always assume currentBufferIndex >= 0
+    return buffers[current_buffer_index];
+}
+const Buffer& Editor::currentBuffer() const {
+    return buffers[current_buffer_index];
+}
+
+std::string& Editor::getNumberBuffer() {
     return number_buffer;
 }
 void Editor::appendNumberBuffer(const char ch) {
@@ -83,212 +133,129 @@ void Editor::clearNumberBuffer() {
 
 // Cursor Movement
 void Editor::moveCursorLeft(int t) {
-    cursor_x -= t;
-    int min = 0;
-    if (cursor_x < min)
-        cursor_x = min;
+    currentBuffer().moveCursorLeft(t);
     refresh_render();
 }
 void Editor::moveCursorRight(int t) {
-    cursor_x += t;
-    int max = static_cast<int>(buffer.getLine(cursor_y).size());
-    if (cursor_x > max)
-        cursor_x = max;
+    currentBuffer().moveCursorRight(t);
     refresh_render();
 }
 void Editor::moveCursorUp(int t) {
-    cursor_y -= t;
-    int min = 0;
-    if (cursor_y < min)
-        cursor_y = min;
-    if (cursor_x > static_cast<int>(buffer.getLine(cursor_y).size()))
-        cursor_x = buffer.getLine(cursor_y).size();
+    currentBuffer().moveCursorUp(t);
     adjustScrolling();
     refresh_render();
 }
 void Editor::moveCursorDown(int t) {
-    cursor_y += t;
-    int max = buffer.getLineCount() - 1;
-    if (cursor_y > max)
-        cursor_y = max;
-    if (cursor_x > static_cast<int>(buffer.getLine(cursor_y).size()))
-        cursor_x = buffer.getLine(cursor_y).size();
+    currentBuffer().moveCursorDown(t);
     adjustScrolling();
     refresh_render();
 }
 
 // Jump to the beginning of the current line
 void Editor::jumpToLineStart() {
-    cursor_x = 0;
+    currentBuffer().jumpToLineStart();
     refresh_render();
 }
 
 // Jump to the end of the current line
 void Editor::jumpToLineEnd() {
-    cursor_x = buffer.getLine(cursor_y).size();
+    currentBuffer().jumpToLineEnd();
     refresh_render();
 }
 
 // Go to the first line with the cursor at the beginning
 void Editor::goToFirstLine() {
-    cursor_y = 0;
-    cursor_x = 0;
+    currentBuffer().goToFirstLine();
     adjustScrolling();
     refresh_render();
 }
 
 // Go to the last line with the cursor at the beginning
 void Editor::goToLastLine() {
-    cursor_y = buffer.getLineCount() - 1;
-    cursor_x = 0;
+    currentBuffer().goToLastLine();
     adjustScrolling();
     refresh_render();
 }
 
 void Editor::jumpToLine(int target_line) {
-    if (target_line < 0)
-        target_line = 0;
-    else if (target_line >= buffer.getLineCount())
-        target_line = buffer.getLineCount() - 1;
-    cursor_y = target_line;
-    cursor_x = 0;
+    currentBuffer().jumpToLine(target_line);
     adjustScrolling();
     refresh_render();
 }
 
 // Delete the current line
 void Editor::deleteCurrentLine() {
-    // Create an Action for undo
-    std::string removed_line = buffer.getLine(cursor_y);
-    Action action;
-    action.type = Action::DELETE_LINE;
-    action.line = cursor_y;
-    action.pos = 0;             // for a full line delete, pos = 0
-    action.text = removed_line; // store the entire line
-    undo_stack.push(action);
-
-    buffer.deleteLine(cursor_y);
-
-    // If we end up past the last line, adjust cursor
-    if (cursor_y >= buffer.getLineCount()) {
-        cursor_y = buffer.getLineCount() - 1;
-    }
-
-    cursor_x = 0; // Move cursor to the beginning of the line
-
+    currentBuffer().deleteCurrentLine();
     adjustScrolling();
     refresh_render();
 }
 
 // Copy the current line
 void Editor::copyCurrentLine() {
-    copied_line =
-        buffer.getLine(cursor_y); // Save the current line to the clipboard
+    // Save the current line to the clipboard
+    copied_line = currentBuffer().getLine(
+        currentBuffer().getCursorY()); 
 }
 
 // Paste the copied content
 void Editor::pasteContent(int t) {
-    if (copied_line.empty())
-        return;
-
-    for (int i = 0; i < t; i++) {
-        // Insert new line after the current line
-        int insert_index = cursor_y + 1;
-        buffer.insertLine(insert_index, copied_line);
-
-        // Record action
-        Action action;
-        action.type = Action::INSERT_LINE;
-        action.line = insert_index;
-        action.pos = 0;
-        action.text = copied_line;
-        undo_stack.push(action);
-
-        // Move the cursor downward to the newly inserted line
-        cursor_y = insert_index;
-        cursor_x = 0;
-    }
+    currentBuffer().pasteContent(copied_line, t);
     adjustScrolling();
     refresh_render();
 }
 
 // Insert Mode Operations
 void Editor::insertCharacter(char c) {
-    buffer.insertChar(cursor_y, cursor_x, c);
-    // Record action for undo
-    Action action;
-    action.type = Action::INSERT_CHAR;
-    action.line = cursor_y;
-    action.pos = cursor_x;
-    action.text = std::string(1, c);
-    undo_stack.push(action);
-    // Update cursor position
-    cursor_x++;
+    currentBuffer().insertCharacter(c);
     refresh_render();
 }
 
 void Editor::handleBackspace() {
-    if (cursor_x > 0) {
-        char deleted_char = buffer.getLine(cursor_y)[cursor_x - 1];
-        buffer.deleteChar(cursor_y, cursor_x - 1);
-        // Record action for undo
-        Action action;
-        action.type = Action::DELETE_CHAR;
-        action.line = cursor_y;
-        action.pos = cursor_x - 1;
-        action.text = std::string(1, deleted_char);
-        undo_stack.push(action);
-        // Update cursor position
-        cursor_x--;
-    } else if (cursor_y > 0) {
-        // Merge with previous line
-        int prev_line_length = buffer.getLine(cursor_y - 1).size();
-        std::string current_line = buffer.getLine(cursor_y);
-        buffer.mergeLines(cursor_y - 1, prev_line_length);
-        // Record action for undo (line merge)
-        Action action;
-        action.type = Action::DELETE_CHAR;
-        action.line = cursor_y - 1;
-        action.pos = prev_line_length;
-        action.text = "\n"; // Representing line merge
-        undo_stack.push(action);
-        // Update cursor position
-        cursor_y--;
-        cursor_x = prev_line_length;
-    }
+    currentBuffer().handleBackspace();
     adjustScrolling();
     refresh_render();
 }
 
 void Editor::handleEnter() {
-    buffer.splitLine(cursor_y, cursor_x);
-    // Record action for undo (line split)
-    Action action;
-    action.type = Action::INSERT_CHAR;
-    action.line = cursor_y;
-    action.pos = cursor_x;
-    action.text = "\n"; // Representing line split
-    undo_stack.push(action);
-    // Move to the new line
-    cursor_y++;
-    cursor_x = 0;
+    currentBuffer().handleEnter();
     adjustScrolling();
     refresh_render();
 }
 
 // Command Execution
-void Editor::executeCommand(const std::string &command) {
+void Editor::executeCommand(const std::string& command) {
     // split the command into parts
     std::vector<std::string> parts = split(command, 2);
 
     // process the write command with optional filename
-    if (parts[0] == "w") {
+    if (parts[0] == "e") {
+        if (parts.size() > 1) {
+            openFile(parts[1]);
+        } else {
+            message = "No file specified";
+        }
+    }
+    // "ls" to list buffers
+    else if (parts[0] == "ls") {
+        listBuffers();
+    }
+    // "buffer <n>" to switch to the nth buffer
+    else if (parts[0] == "buffer" || parts[0] == "b") {
+        if (parts.size() > 1) {
+            int idx = std::stoi(parts[1]) - 1; // user is 1-based
+            switchBuffer(idx);
+        } else {
+            message = "buffer command requires a number";
+        }
+    } else if (parts[0] == "w") {
         try {
             saveFile(parts.size() > 1 ? parts[1] : "");
-        } catch (const std::runtime_error &e) {
+        } catch (const std::runtime_error& e) {
             message = e.what();
         }
+
     } else if (parts[0] == "q") {
+        
         shutdown();
         exit(0);
     }
@@ -298,7 +265,7 @@ void Editor::executeCommand(const std::string &command) {
             saveFile(parts.size() > 1 ? parts[1] : "");
             shutdown();
             exit(0);
-        } catch (const std::runtime_error &e) {
+        } catch (const std::runtime_error& e) {
             message = e.what();
         }
 
@@ -309,8 +276,8 @@ void Editor::executeCommand(const std::string &command) {
         if (first != std::string::npos && second != std::string::npos) {
             std::string old_str = command.substr(pref + 1, first - pref - 1);
             std::string new_str = command.substr(first + 1, second - first - 1);
-            for (int i = 0; i < buffer.getLineCount(); ++i) {
-                buffer.replaceAll(i, old_str, new_str);
+            for (int i = 0; i < currentBuffer().getLineCount(); ++i) {
+                currentBuffer().replaceAll(i, old_str, new_str);
             }
             // Optionally, record replace action for undo
             refresh_render();
@@ -325,157 +292,22 @@ void Editor::executeCommand(const std::string &command) {
 
 // Undo/Redo Operations
 void Editor::undo() {
-    if (undo_stack.empty())
-        return;
-    Action action = undo_stack.top();
-    undo_stack.pop();
-
-    switch (action.type) {
-    case Action::INSERT_CHAR:
-        if (action.text == "\n") {
-            // We inserted a newline => we splitted a line.
-            // Undo means we do the opposite: merge lines.
-            buffer.mergeLines(action.line, action.pos);
-
-            // Position the cursor so it makes sense after the merge.
-            cursor_y = action.line;
-            cursor_x = action.pos;
-        } else {
-            // We inserted a character => undo means we delete it.
-            buffer.deleteChar(action.line, action.pos);
-
-            // Position the cursor so it makes sense after the deletion.
-            cursor_y = action.line;
-            cursor_x = action.pos;
-        }
-        break;
-
-    case Action::DELETE_CHAR:
-        if (action.text == "\n") {
-            // We removed a newline => line merge
-            // The opposite is to split them again
-            buffer.splitLine(action.line, action.pos);
-            // Usually go to the new line
-            cursor_y = action.line + 1;
-            cursor_x = 0;
-        } else {
-            // We removed 1 normal char
-            buffer.insertChar(action.line, action.pos, action.text[0]);
-            cursor_y = action.line;
-            cursor_x = action.pos + 1;
-        }
-        break;
-
-    case Action::INSERT_LINE:
-        // The opposite is to remove that line
-        buffer.deleteLine(action.line);
-        // Cursor might go to that line if it still exists
-        if (action.line >= buffer.getLineCount()) {
-            cursor_y = buffer.getLineCount() - 1;
-        } else {
-            cursor_y = action.line;
-        }
-        cursor_x = 0;
-        break;
-
-    case Action::DELETE_LINE:
-        // The opposite is to re-insert that line
-        buffer.insertLine(action.line, action.text);
-        cursor_y = action.line;
-        cursor_x = 0;
-        break;
-
-    case Action::REPLACE:
-        // Implement replace undo if needed
-        break;
-    }
-
-    // Push the inverse action to redo stack
-    redo_stack.push(action);
+    currentBuffer().undo();
     refresh_render();
 }
 
 void Editor::redo() {
-    if (redo_stack.empty())
-        return;
-    Action action = redo_stack.top();
-    redo_stack.pop();
-
-    switch (action.type) {
-    case Action::INSERT_CHAR:
-        if (action.text == "\n") {
-            // Re-split lines
-            buffer.splitLine(action.line, action.pos);
-            cursor_y = action.line + 1;
-            cursor_x = 0;
-        } else {
-            buffer.insertChar(action.line, action.pos, action.text[0]);
-            cursor_y = action.line;
-            cursor_x = action.pos + 1;
-        }
-        break;
-
-    case Action::DELETE_CHAR:
-        if (action.text == "\n") {
-            // Re-merge lines
-            buffer.mergeLines(action.line, action.pos);
-            cursor_y = action.line;
-            cursor_x = action.pos;
-        } else {
-            buffer.deleteChar(action.line, action.pos);
-            cursor_y = action.line;
-            cursor_x = action.pos;
-        }
-        break;
-
-    case Action::INSERT_LINE:
-        // Re-insert line
-        buffer.insertLine(action.line, action.text);
-        cursor_y = action.line;
-        cursor_x = 0;
-        break;
-
-    case Action::DELETE_LINE:
-        // Re-delete line
-        buffer.deleteLine(action.line);
-        if (cursor_y >= buffer.getLineCount()) {
-            cursor_y = buffer.getLineCount() - 1;
-        }
-        cursor_x = 0;
-        break;
-
-    case Action::REPLACE:
-        // Implement replace redo if needed
-        break;
-    }
-
-    // Move action to undo stack
-    undo_stack.push(action);
+    currentBuffer().redo();
     refresh_render();
 }
 
-// File Operations
-void Editor::openFile(const std::string &fname) {
-    filename = fname;
-    if (!buffer.loadFromFile(fname)) {
-        // If file doesn't exist, start with an empty buffer
-        // buffer.addLine("");
-    }
-    refresh_render();
-}
-
-void Editor::saveFile(const std::string &fname) {
-    if (filename.empty() && fname.empty()) {
-        throw std::runtime_error("No filename specified");
-    } else if (!fname.empty()) {
-        filename = fname;
-    }
-    buffer.saveToFile(filename);
+void Editor::saveFile(const std::string& fname) {
+    currentBuffer().saveToFile(fname);
     // Optionally, display a save confirmation in the status bar
     refresh_render();
 }
 
 // Renderer Access
-Renderer &Editor::getRenderer() {
+Renderer& Editor::getRenderer() {
     return *renderer;
 }
