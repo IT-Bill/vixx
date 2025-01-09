@@ -86,9 +86,9 @@ This program can correctly deal with a line of text that is too long, and it can
 ![Program Window](doc/fig1.png)
    - The yellow numbers in the left column are line numbers.
    - The white text in the middle is the text content.
-   - The green text on the left side of the bottom row indicates the Mode and row number.
+   - The green text on the left side of the bottom row indicates the Mode and the position of cursor.
    - The light blue number in the middle of the bottom row is the Normal numeric control record.
-   - The blue text on the right side of the bottom row gives the file name, relative path, and total number of rows.
+   - The blue text on the right side of the bottom row gives the file name, relative path, and total number of lines.
 3. **Command-Mode Input**:
 ![Program Window](doc/fig2.png)
    - When typing in command mode, the bottom line is temporarily replaced with light blue command input.
