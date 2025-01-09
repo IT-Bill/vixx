@@ -84,7 +84,7 @@ void InputHandler::handleNormalMode(int ch) {
         case 'u':
             editor_ref.undo();
             break;
-        case 'R':
+        case 18:  // Ctrl+R
             editor_ref.redo();
             break;
         case '0':
