@@ -1,29 +1,28 @@
 // src/backend/editor.cpp
 
 #include "backend/editor.h"
-#include "frontend/renderer.h"
-#include "frontend/input_handler.h"
 #include "common/utils.h"
+#include "frontend/input_handler.h"
+#include "frontend/renderer.h"
 #include <stdexcept>
 #include <string>
 
 // Constructor
-Editor::Editor() : mode(Mode::NORMAL), cursor_x(0), cursor_y(0), top_line(0), filename(""), message(""), number_buffer(""), renderer(nullptr) {
+Editor::Editor()
+    : mode(Mode::NORMAL), cursor_x(0), cursor_y(0), top_line(0), filename(""),
+      message(""), number_buffer(""), renderer(nullptr) {
     initialize();
 }
 
 // Destructor
-Editor::~Editor() {
-    shutdown();
-}
+Editor::~Editor() { shutdown(); }
 
 void Editor::refresh_render() {
-    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename, message, number_buffer);
+    renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename,
+                     message, number_buffer);
 }
 
-void Editor::clear_message() {
-    message = "";
-}
+void Editor::clear_message() { message = ""; }
 
 // Initialize the editor (including the renderer)
 void Editor::initialize() {
@@ -43,9 +42,7 @@ void Editor::shutdown() {
 }
 
 // Mode Management
-Mode Editor::getMode() const {
-    return mode;
-}
+Mode Editor::getMode() const { return mode; }
 
 void Editor::switchMode(Mode new_mode) {
     mode = new_mode;
@@ -58,24 +55,19 @@ void Editor::switchMode(Mode new_mode) {
 // Adjust top_line for scrolling
 void Editor::adjustScrolling() {
     int screen_lines = renderer->getScreenHeight() - 1;
-    if (cursor_y < top_line) {  // Scroll up
+    if (cursor_y < top_line) { // Scroll up
         top_line = cursor_y;
-    } else {    // Scroll down
-        int new_top = buffer.calculateTopLine(cursor_y, renderer->getCOLS(), screen_lines);
+    } else { // Scroll down
+        int new_top = buffer.calculateTopLine(cursor_y, renderer->getCOLS(),
+                                              screen_lines);
         if (new_top > top_line)
             top_line = new_top;
-    } 
+    }
 }
 
-std::string& Editor::getNumberBuffer() {
-    return number_buffer;
-}
-void Editor::appendNumberBuffer(const char ch) {
-    number_buffer += ch;
-}
-void Editor::clearNumberBuffer() {
-    number_buffer.clear();
-}
+std::string &Editor::getNumberBuffer() { return number_buffer; }
+void Editor::appendNumberBuffer(const char ch) { number_buffer += ch; }
+void Editor::clearNumberBuffer() { number_buffer.clear(); }
 
 // Cursor Movement
 void Editor::moveCursorLeft(int t) {
@@ -142,7 +134,7 @@ void Editor::goToLastLine() {
 }
 
 void Editor::jumpToLine(int target_line) {
-    if (target_line < 0) 
+    if (target_line < 0)
         target_line = 0;
     else if (target_line >= buffer.getLineCount())
         target_line = buffer.getLineCount() - 1;
@@ -152,54 +144,69 @@ void Editor::jumpToLine(int target_line) {
     refresh_render();
 }
 
-
 // Delete the current line
 void Editor::deleteCurrentLine() {
-    // Record action for undo
+    // Create an Action for undo
+    std::string removed_line = buffer.getLine(cursor_y);
     Action action;
-    action.type = Action::DELETE;
+    action.type = Action::DELETE_LINE;
     action.line = cursor_y;
-    action.pos = 0;
-    action.text = std::string(buffer.getLine(cursor_y) + "\n");
+    action.pos = 0;             // for a full line delete, pos = 0
+    action.text = removed_line; // store the entire line
     undo_stack.push(action);
 
     buffer.deleteLine(cursor_y);
+
+    // If we end up past the last line, adjust cursor
     if (cursor_y >= buffer.getLineCount()) {
-        cursor_y = buffer.getLineCount() - 1; // Adjust if the cursor is beyond the last line
+        cursor_y = buffer.getLineCount() - 1;
     }
 
     cursor_x = 0; // Move cursor to the beginning of the line
+
+
     adjustScrolling();
     refresh_render();
 }
 
 // Copy the current line
 void Editor::copyCurrentLine() {
-    copied_line = buffer.getLine(cursor_y); // Save the current line to the clipboard
+    copied_line =
+        buffer.getLine(cursor_y); // Save the current line to the clipboard
 }
 
 // Paste the copied content
 void Editor::pasteContent(int t) {
-    if (!copied_line.empty()) {
-        for (int i = 0; i < t; ++i) {
-            std::string& current_line = buffer.getLine(cursor_y);
-            std::string before_cursor = current_line.substr(0, cursor_x);
-            std::string after_cursor = current_line.substr(cursor_x);
+    if (copied_line.empty())
+        return;
 
-            current_line = before_cursor + copied_line + after_cursor;
-            cursor_x += copied_line.size();
-        }
-        refresh_render();
+    for (int i = 0; i < t; i++) {
+        // Insert new line after the current line
+        int insert_index = cursor_y + 1;
+        buffer.insertLine(insert_index, copied_line);
+
+        // Record action
+        Action action;
+        action.type = Action::INSERT_LINE;
+        action.line = insert_index;
+        action.pos  = 0; 
+        action.text = copied_line;
+        undo_stack.push(action);
+
+        // Move the cursor downward to the newly inserted line
+        cursor_y = insert_index;
+        cursor_x = 0;
     }
+    adjustScrolling();
+    refresh_render();
 }
-
 
 // Insert Mode Operations
 void Editor::insertCharacter(char c) {
     buffer.insertChar(cursor_y, cursor_x, c);
     // Record action for undo
     Action action;
-    action.type = Action::INSERT;
+    action.type = Action::INSERT_CHAR;
     action.line = cursor_y;
     action.pos = cursor_x;
     action.text = std::string(1, c);
@@ -215,22 +222,21 @@ void Editor::handleBackspace() {
         buffer.deleteChar(cursor_y, cursor_x - 1);
         // Record action for undo
         Action action;
-        action.type = Action::DELETE;
+        action.type = Action::DELETE_CHAR;
         action.line = cursor_y;
         action.pos = cursor_x - 1;
         action.text = std::string(1, deleted_char);
         undo_stack.push(action);
         // Update cursor position
         cursor_x--;
-    }
-    else if (cursor_y > 0) {
+    } else if (cursor_y > 0) {
         // Merge with previous line
         int prev_line_length = buffer.getLine(cursor_y - 1).size();
         std::string current_line = buffer.getLine(cursor_y);
         buffer.mergeLines(cursor_y - 1, prev_line_length);
         // Record action for undo (line merge)
         Action action;
-        action.type = Action::DELETE;
+        action.type = Action::DELETE_CHAR;
         action.line = cursor_y - 1;
         action.pos = prev_line_length;
         action.text = "\n"; // Representing line merge
@@ -247,7 +253,7 @@ void Editor::handleEnter() {
     buffer.splitLine(cursor_y, cursor_x);
     // Record action for undo (line split)
     Action action;
-    action.type = Action::INSERT;
+    action.type = Action::INSERT_CHAR;
     action.line = cursor_y;
     action.pos = cursor_x;
     action.text = "\n"; // Representing line split
@@ -260,7 +266,7 @@ void Editor::handleEnter() {
 }
 
 // Command Execution
-void Editor::executeCommand(const std::string& command) {
+void Editor::executeCommand(const std::string &command) {
     // split the command into parts
     std::vector<std::string> parts = split(command, 2);
 
@@ -268,11 +274,10 @@ void Editor::executeCommand(const std::string& command) {
     if (parts[0] == "w") {
         try {
             saveFile(parts.size() > 1 ? parts[1] : "");
-        } catch (const std::runtime_error& e) {
+        } catch (const std::runtime_error &e) {
             message = e.what();
         }
-    }
-    else if (parts[0] == "q") {
+    } else if (parts[0] == "q") {
         shutdown();
         exit(0);
     }
@@ -282,12 +287,11 @@ void Editor::executeCommand(const std::string& command) {
             saveFile(parts.size() > 1 ? parts[1] : "");
             shutdown();
             exit(0);
-        } catch (const std::runtime_error& e) {
+        } catch (const std::runtime_error &e) {
             message = e.what();
         }
 
-    }
-    else if (command.rfind("s/", 0) == 0) { // s/old/new/g
+    } else if (command.rfind("s/", 0) == 0) { // s/old/new/g
         size_t pref = 1;
         size_t first = command.find('/', pref + 1);
         size_t second = command.find('/', first + 1);
@@ -310,49 +314,70 @@ void Editor::executeCommand(const std::string& command) {
 
 // Undo/Redo Operations
 void Editor::undo() {
-    if (undo_stack.empty()) return;
+    if (undo_stack.empty())
+        return;
     Action action = undo_stack.top();
     undo_stack.pop();
 
     switch (action.type) {
-        case Action::INSERT:
-            if (action.text == "\n") {
-                // We inserted a newline => we splitted a line. 
-                // Undo means we do the opposite: merge lines.
-                buffer.mergeLines(action.line, action.pos);
+    case Action::INSERT_CHAR:
+        if (action.text == "\n") {
+            // We inserted a newline => we splitted a line.
+            // Undo means we do the opposite: merge lines.
+            buffer.mergeLines(action.line, action.pos);
 
-                // Position the cursor so it makes sense after the merge.
-                cursor_y = action.line;
-                cursor_x = action.pos;
-            } else {
-                // We inserted a character => undo means we delete it.
-                buffer.deleteChar(action.line, action.pos);
+            // Position the cursor so it makes sense after the merge.
+            cursor_y = action.line;
+            cursor_x = action.pos;
+        } else {
+            // We inserted a character => undo means we delete it.
+            buffer.deleteChar(action.line, action.pos);
 
-                // Position the cursor so it makes sense after the deletion.
-                cursor_y = action.line;
-                cursor_x = action.pos;
-            }
-            break;
-            
-        case Action::DELETE:
-            if (action.text == "\n") {
-                // We deleted a newline => we merged lines. 
-                // Undo means we do the opposite: split lines.
-                buffer.splitLine(action.line, action.pos);
+            // Position the cursor so it makes sense after the deletion.
+            cursor_y = action.line;
+            cursor_x = action.pos;
+        }
+        break;
 
-                // Position the cursor so it makes sense after the split.
-                cursor_y = action.line + 1; 
-                cursor_x = 0; // or you can refine this 
-            } else {
-                // We deleted a normal character => re-insert that char.
-                buffer.insertChar(action.line, action.pos, action.text[0]);
-                cursor_y = action.line;
-                cursor_x = action.pos + 1;
-            }
-            break;
-        case Action::REPLACE:
-            // Implement replace undo if needed
-            break;
+    case Action::DELETE_CHAR:
+        if (action.text == "\n") {
+            // We removed a newline => line merge
+            // The opposite is to split them again
+            buffer.splitLine(action.line, action.pos);
+            // Usually go to the new line
+            cursor_y = action.line + 1;
+            cursor_x = 0;
+        } else {
+            // We removed 1 normal char
+            buffer.insertChar(action.line, action.pos, action.text[0]);
+            cursor_y = action.line;
+            cursor_x = action.pos + 1;
+        }
+        break;
+
+    case Action::INSERT_LINE:
+        // The opposite is to remove that line
+        buffer.deleteLine(action.line);
+        // Cursor might go to that line if it still exists
+        if (action.line >= buffer.getLineCount()) {
+            cursor_y = buffer.getLineCount() - 1;
+        } else {
+            cursor_y = action.line;
+        }
+        cursor_x = 0;
+        break;
+
+    case Action::DELETE_LINE:
+        // The opposite is to re-insert that line
+        buffer.insertLine(action.line, action.text);
+        cursor_y = action.line;
+        cursor_x = 0;
+        message = "UNDO: Deleted line restored " + std::to_string(action.line);
+        break;
+
+    case Action::REPLACE:
+        // Implement replace undo if needed
+        break;
     }
 
     // Push the inverse action to redo stack
@@ -361,53 +386,66 @@ void Editor::undo() {
 }
 
 void Editor::redo() {
-    if (redo_stack.empty()) return;
+    if (redo_stack.empty())
+        return;
     Action action = redo_stack.top();
     redo_stack.pop();
 
     switch (action.type) {
-        case Action::INSERT:
-            if (action.text == "\n") {
-                // We re-insert a newline => line split again.
-                buffer.splitLine(action.line, action.pos);
-                cursor_y = action.line + 1;
-                cursor_x = 0; // or refine further
-            } else {
-                // Re-insert the character
-                buffer.insertChar(action.line, action.pos, action.text[0]);
-                cursor_x = action.pos + 1;
-                cursor_y = action.line;
-            }
-            break;
+    case Action::INSERT_CHAR:
+        if (action.text == "\n") {
+            // Re-split lines
+            buffer.splitLine(action.line, action.pos);
+            cursor_y = action.line + 1;
+            cursor_x = 0;
+        } else {
+            buffer.insertChar(action.line, action.pos, action.text[0]);
+            cursor_y = action.line;
+            cursor_x = action.pos + 1;
+        }
+        break;
 
-        case Action::DELETE:
-            if (action.text == "\n") {
-                // We re-delete a newline => line merge again.
-                buffer.mergeLines(action.line, action.pos);
+    case Action::DELETE_CHAR:
+        if (action.text == "\n") {
+            // Re-merge lines
+            buffer.mergeLines(action.line, action.pos);
+            cursor_y = action.line;
+            cursor_x = action.pos;
+        } else {
+            buffer.deleteChar(action.line, action.pos);
+            cursor_y = action.line;
+            cursor_x = action.pos;
+        }
+        break;
 
-                // After merging, the new line disappears, so...
-                cursor_y = action.line;
-                cursor_x = action.pos;
-            } else {
-                // Remove the character again
-                buffer.deleteChar(action.line, action.pos);
-                cursor_x = action.pos;
-                cursor_y = action.line;
-            }
-            break;
-            
-        case Action::REPLACE:
-            // Implement replace redo if needed
-            break;
+    case Action::INSERT_LINE:
+        // Re-insert line
+        buffer.insertLine(action.line, action.text);
+        cursor_y = action.line;
+        cursor_x = 0;
+        break;
+
+    case Action::DELETE_LINE:
+        // Re-delete line
+        buffer.deleteLine(action.line);
+        if (cursor_y >= buffer.getLineCount()) {
+            cursor_y = buffer.getLineCount() - 1;
+        }
+        cursor_x = 0;
+        break;
+
+    case Action::REPLACE:
+        // Implement replace redo if needed
+        break;
     }
 
-    // Push the action back to undo stack
+    // Move action to undo stack
     undo_stack.push(action);
     refresh_render();
 }
 
 // File Operations
-void Editor::openFile(const std::string& fname) {
+void Editor::openFile(const std::string &fname) {
     filename = fname;
     if (!buffer.loadFromFile(fname)) {
         // If file doesn't exist, start with an empty buffer
@@ -416,7 +454,7 @@ void Editor::openFile(const std::string& fname) {
     refresh_render();
 }
 
-void Editor::saveFile(const std::string& fname) {
+void Editor::saveFile(const std::string &fname) {
     if (filename.empty() && fname.empty()) {
         throw std::runtime_error("No filename specified");
     } else if (!fname.empty()) {
@@ -428,6 +466,4 @@ void Editor::saveFile(const std::string& fname) {
 }
 
 // Renderer Access
-Renderer& Editor::getRenderer() {
-    return *renderer;
-}
+Renderer &Editor::getRenderer() { return *renderer; }
