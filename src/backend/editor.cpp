@@ -316,23 +316,38 @@ void Editor::undo() {
 
     switch (action.type) {
         case Action::INSERT:
-            // Remove the inserted character
-            buffer.deleteChar(action.line, action.pos);
-            cursor_x = action.pos;
-            cursor_y = action.line;
+            if (action.text == "\n") {
+                // We inserted a newline => we splitted a line. 
+                // Undo means we do the opposite: merge lines.
+                buffer.mergeLines(action.line, action.pos);
+
+                // Position the cursor so it makes sense after the merge.
+                cursor_y = action.line;
+                cursor_x = action.pos;
+            } else {
+                // We inserted a character => undo means we delete it.
+                buffer.deleteChar(action.line, action.pos);
+
+                // Position the cursor so it makes sense after the deletion.
+                cursor_y = action.line;
+                cursor_x = action.pos;
+            }
             break;
+            
         case Action::DELETE:
             if (action.text == "\n") {
-                // Handle line merge
-                buffer.mergeLines(action.line, action.pos);
-                cursor_y = action.line + 1;
-                cursor_x = 0;
-            }
-            else {
-                // Re-insert the deleted character
+                // We deleted a newline => we merged lines. 
+                // Undo means we do the opposite: split lines.
+                buffer.splitLine(action.line, action.pos);
+
+                // Position the cursor so it makes sense after the split.
+                cursor_y = action.line + 1; 
+                cursor_x = 0; // or you can refine this 
+            } else {
+                // We deleted a normal character => re-insert that char.
                 buffer.insertChar(action.line, action.pos, action.text[0]);
-                cursor_x = action.pos + 1;
                 cursor_y = action.line;
+                cursor_x = action.pos + 1;
             }
             break;
         case Action::REPLACE:
@@ -352,25 +367,35 @@ void Editor::redo() {
 
     switch (action.type) {
         case Action::INSERT:
-            // Re-insert the character
-            buffer.insertChar(action.line, action.pos, action.text[0]);
-            cursor_x = action.pos + 1;
-            cursor_y = action.line;
-            break;
-        case Action::DELETE:
             if (action.text == "\n") {
-                // Handle line split
+                // We re-insert a newline => line split again.
                 buffer.splitLine(action.line, action.pos);
                 cursor_y = action.line + 1;
-                cursor_x = 0;
+                cursor_x = 0; // or refine further
+            } else {
+                // Re-insert the character
+                buffer.insertChar(action.line, action.pos, action.text[0]);
+                cursor_x = action.pos + 1;
+                cursor_y = action.line;
             }
-            else {
+            break;
+
+        case Action::DELETE:
+            if (action.text == "\n") {
+                // We re-delete a newline => line merge again.
+                buffer.mergeLines(action.line, action.pos);
+
+                // After merging, the new line disappears, so...
+                cursor_y = action.line;
+                cursor_x = action.pos;
+            } else {
                 // Remove the character again
                 buffer.deleteChar(action.line, action.pos);
                 cursor_x = action.pos;
                 cursor_y = action.line;
             }
             break;
+            
         case Action::REPLACE:
             // Implement replace redo if needed
             break;
