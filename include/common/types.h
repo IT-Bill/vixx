@@ -4,9 +4,16 @@
 #define TYPES_H
 
 #include <string>
+#include <vector>
 
 // Enumeration for editor modes
 enum class Mode { NORMAL, INSERT, COMMAND };
+
+struct ReplaceLine {
+    int lineNumber;          // which line was changed
+    std::string oldLine;     // old content of that line
+    std::string newLine;     // new content after replacement
+};
 
 // Structure to represent an action for undo/redo
 struct Action {
@@ -22,6 +29,8 @@ struct Action {
     int line;
     int pos;
     std::string text;
+
+    std::vector<ReplaceLine> replaceLines;
 };
 
 #endif // TYPES_H

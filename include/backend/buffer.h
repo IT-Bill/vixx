@@ -36,8 +36,8 @@ class Buffer {
     void deleteChar(int line, int pos);
     void splitLine(int line, int pos);
     void mergeLines(int line, int pos);
-    void replaceAll(int line_number, const std::string& old_str,
-                    const std::string& new_str);
+    void replaceOneLine(int line, const std::string& old_str, const std::string& new_str);
+    void replaceAll(const std::string& old_str, const std::string& new_str);
 
     // Accessors
     const std::string& getLine(int index) const;
@@ -71,6 +71,8 @@ class Buffer {
     void insertCharacter(char c);
     void handleBackspace();
     void handleEnter();
+
+    // Replace Mode Operations
 
     // Undo/Redo Operations
     void undo();

@@ -276,18 +276,17 @@ void Editor::executeCommand(const std::string& command) {
         if (first != std::string::npos && second != std::string::npos) {
             std::string old_str = command.substr(pref + 1, first - pref - 1);
             std::string new_str = command.substr(first + 1, second - first - 1);
-            for (int i = 0; i < currentBuffer().getLineCount(); ++i) {
-                currentBuffer().replaceAll(i, old_str, new_str);
-            }
-            // Optionally, record replace action for undo
+            currentBuffer().replaceAll(old_str, new_str);
+            
             refresh_render();
         } else {
             message = "Insufficient parameter";
         }
+
     } else {
         message = "Not an editor command: " + command;
     }
-    // Add more commands as needed
+    
 }
 
 // Undo/Redo Operations

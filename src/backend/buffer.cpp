@@ -1,6 +1,8 @@
 // src/backend/buffer.cpp
 
 #include "backend/buffer.h"
+#include "common/types.h"
+#include <cstddef>
 #include <fstream>
 
 // Constructor: Initializes the buffer with a single empty line
@@ -129,19 +131,54 @@ void Buffer::mergeLines(int line, int pos) {
     lines.erase(lines.begin() + line + 1); // Remove the next line
 }
 
-// Replaces all occurrences of a substring in a specific line with a new
-// substring
-void Buffer::replaceAll(int line_number, const std::string& old_str,
-                        const std::string& new_str) {
-    if (line_number < 0 || line_number >= static_cast<int>(lines.size())) {
+void Buffer::replaceOneLine(int line, const std::string& old_str, const std::string& new_str) {
+    if (line < 0 || line >= static_cast<int>(lines.size())) {
         return; // Invalid line number
     }
 
-    std::string& line = lines[line_number];
-    size_t pos = 0;
-    while ((pos = line.find(old_str, pos)) != std::string::npos) {
-        line.replace(pos, old_str.length(), new_str);
-        pos += new_str.length(); // Move past the new substring
+    size_t pos = lines[line].find(old_str);
+    if (pos != std::string::npos) {
+        lines[line].replace(pos, old_str.length(), new_str);
+    }
+}
+
+void Buffer::replaceAll(const std::string& old_str, const std::string& new_str) {
+    Action action;
+    action.type = Action::REPLACE;
+
+    // 1) For each line, store the old version before we do the replace
+    for (size_t i = 0; i < lines.size(); ++i) {
+        std::string& originalLine = lines[i];
+
+        if (originalLine.find(old_str) != std::string::npos) {
+            ReplaceLine rl;
+            rl.lineNumber = i;
+            rl.oldLine = originalLine;
+            // We'll fill rc.newLine after the replacement.
+
+            action.replaceLines.push_back(rl);
+        }
+    }
+
+    // 2) Perform the actual replacement
+    for (auto& line : lines) {
+        size_t pos = 0;
+        while ((pos = line.find(old_str, pos)) != std::string::npos) {
+            line.replace(pos, old_str.length(), new_str);
+            pos += new_str.length(); // Move past the new substring
+        }
+    }
+
+    // 3) Now we populate `newLine` in each ReplaceChange from the buffer after
+    //    the replacement
+    for (auto& rl : action.replaceLines) {
+        rl.newLine = lines[rl.lineNumber];
+    }
+
+    // 4) If something actually changed, we push it to the undo stack
+    //    If no line was changed, action.replaceChanges would be empty
+    if (!action.replaceLines.empty()) {
+        undo_stack.push(action);
     }
 }
 
@@ -241,7 +278,6 @@ void Buffer::deleteCurrentLine() {
     }
 
     cursor_x = 0; // Move cursor to the beginning of the line
-
 }
 // void Buffer::copyCurrentLine();
 
@@ -391,7 +427,9 @@ void Buffer::undo() {
         break;
 
     case Action::REPLACE:
-        // Implement replace undo if needed
+        for (auto& rl : action.replaceLines) {
+            lines[rl.lineNumber] = rl.oldLine;
+        }
         break;
     }
 
@@ -449,14 +487,15 @@ void Buffer::redo() {
         break;
 
     case Action::REPLACE:
-        // Implement replace redo if needed
+        for (auto& rl : action.replaceLines) {
+            lines[rl.lineNumber] = rl.newLine;
+        }
         break;
     }
 
     // Move action to undo stack
     undo_stack.push(action);
 }
-
 
 int Buffer::calculateTopLine(int bottomLine, int COLS, int screen_lines) {
     int topLine = bottomLine;
