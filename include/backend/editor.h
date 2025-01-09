@@ -3,17 +3,17 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
-#include <string>
-#include <stack>
-#include <ncurses.h>
-#include "common/types.h"
 #include "backend/buffer.h"
+#include "common/types.h"
+#include <ncurses.h>
+#include <stack>
+#include <string>
 
-class Renderer;       // Forward declaration
-class InputHandler;   // Forward declaration
+class Renderer;     // Forward declaration
+class InputHandler; // Forward declaration
 
 class Editor {
-public:
+  public:
     Editor();
     ~Editor();
 
@@ -61,16 +61,15 @@ public:
     // Renderer Access
     Renderer& getRenderer();
 
-
-private:
+  private:
     Buffer buffer;
     Mode mode;
     int cursor_x;
     int cursor_y;
     int top_line;
-    int window_start_line;      // Current window start line
-    int window_height;          // Current window height
-    std::string number_buffer;  // To record digitally-guided commands
+    int window_start_line;     // Current window start line
+    int window_height;         // Current window height
+    std::string number_buffer; // To record digitally-guided commands
     std::string copied_line;
     std::string filename;
     std::string message;
@@ -84,7 +83,6 @@ private:
     void initialize();
     void shutdown();
     void adjustScrolling();
-
 };
 
 #endif // EDITOR_H

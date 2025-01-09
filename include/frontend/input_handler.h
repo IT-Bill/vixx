@@ -8,13 +8,13 @@
 class Editor; // Forward declaration
 
 class InputHandler {
-public:
+  public:
     InputHandler(Editor& editor);
     ~InputHandler();
 
     void handleInput(int ch);
 
-private:
+  private:
     Editor& editor_ref;
     std::string command_buffer;
 

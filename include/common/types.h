@@ -6,19 +6,15 @@
 #include <string>
 
 // Enumeration for editor modes
-enum class Mode {
-    NORMAL,
-    INSERT,
-    COMMAND
-};
+enum class Mode { NORMAL, INSERT, COMMAND };
 
 // Structure to represent an action for undo/redo
 struct Action {
     enum Type {
-        INSERT_CHAR,  // single-character (includes '\n' for line-split)
-        DELETE_CHAR,  // single-character (includes '\n' for line-merge)
-        INSERT_LINE,  // entire line inserted
-        DELETE_LINE,  // entire line deleted
+        INSERT_CHAR, // single-character (includes '\n' for line-split)
+        DELETE_CHAR, // single-character (includes '\n' for line-merge)
+        INSERT_LINE, // entire line inserted
+        DELETE_LINE, // entire line deleted
 
         REPLACE
     };

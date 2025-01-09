@@ -15,14 +15,18 @@ Editor::Editor()
 }
 
 // Destructor
-Editor::~Editor() { shutdown(); }
+Editor::~Editor() {
+    shutdown();
+}
 
 void Editor::refresh_render() {
     renderer->render(buffer, cursor_x, cursor_y, top_line, mode, filename,
                      message, number_buffer);
 }
 
-void Editor::clear_message() { message = ""; }
+void Editor::clear_message() {
+    message = "";
+}
 
 // Initialize the editor (including the renderer)
 void Editor::initialize() {
@@ -42,7 +46,9 @@ void Editor::shutdown() {
 }
 
 // Mode Management
-Mode Editor::getMode() const { return mode; }
+Mode Editor::getMode() const {
+    return mode;
+}
 
 void Editor::switchMode(Mode new_mode) {
     mode = new_mode;
@@ -65,9 +71,15 @@ void Editor::adjustScrolling() {
     }
 }
 
-std::string &Editor::getNumberBuffer() { return number_buffer; }
-void Editor::appendNumberBuffer(const char ch) { number_buffer += ch; }
-void Editor::clearNumberBuffer() { number_buffer.clear(); }
+std::string &Editor::getNumberBuffer() {
+    return number_buffer;
+}
+void Editor::appendNumberBuffer(const char ch) {
+    number_buffer += ch;
+}
+void Editor::clearNumberBuffer() {
+    number_buffer.clear();
+}
 
 // Cursor Movement
 void Editor::moveCursorLeft(int t) {
@@ -164,7 +176,6 @@ void Editor::deleteCurrentLine() {
 
     cursor_x = 0; // Move cursor to the beginning of the line
 
-
     adjustScrolling();
     refresh_render();
 }
@@ -189,7 +200,7 @@ void Editor::pasteContent(int t) {
         Action action;
         action.type = Action::INSERT_LINE;
         action.line = insert_index;
-        action.pos  = 0; 
+        action.pos = 0;
         action.text = copied_line;
         undo_stack.push(action);
 
@@ -465,4 +476,6 @@ void Editor::saveFile(const std::string &fname) {
 }
 
 // Renderer Access
-Renderer &Editor::getRenderer() { return *renderer; }
+Renderer &Editor::getRenderer() {
+    return *renderer;
+}
