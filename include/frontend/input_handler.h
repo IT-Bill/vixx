@@ -21,7 +21,7 @@ private:
     void handleNormalMode(int ch);
     void handleInsertMode(int ch);
     void handleCommandMode(int ch);
-    int numOrElse1();
+    int getNumberBufferOrDefaultOne();
 };
 
 #endif // INPUT_HANDLER_H

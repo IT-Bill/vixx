@@ -70,16 +70,16 @@ void InputHandler::handleNormalMode(int ch) {
             command_buffer.clear();
             break;
         case 'h': case 260:
-            editor_ref.moveCursorLeft(numOrElse1());
+            editor_ref.moveCursorLeft(getNumberBufferOrDefaultOne());
             break;
         case 'j': case 258:
-            editor_ref.moveCursorDown(numOrElse1());
+            editor_ref.moveCursorDown(getNumberBufferOrDefaultOne());
             break;
         case 'k': case 259:
-            editor_ref.moveCursorUp(numOrElse1());
+            editor_ref.moveCursorUp(getNumberBufferOrDefaultOne());
             break;
         case 'l': case 261:
-            editor_ref.moveCursorRight(numOrElse1());
+            editor_ref.moveCursorRight(getNumberBufferOrDefaultOne());
             break;
         case 'u':
             editor_ref.undo();
@@ -100,7 +100,7 @@ void InputHandler::handleNormalMode(int ch) {
                 editor_ref.goToLastLine();
             break;
         case 'p':
-            editor_ref.pasteContent(numOrElse1());
+            editor_ref.pasteContent(getNumberBufferOrDefaultOne());
             break;
         default:
             last_char = ch;
@@ -124,16 +124,16 @@ void InputHandler::handleInsertMode(int ch) {
             editor_ref.handleEnter();
             break;
         case 260:
-            editor_ref.moveCursorLeft(numOrElse1());
+            editor_ref.moveCursorLeft(getNumberBufferOrDefaultOne());
             break;
         case 258:
-            editor_ref.moveCursorDown(numOrElse1());
+            editor_ref.moveCursorDown(getNumberBufferOrDefaultOne());
             break;
         case 259:
-            editor_ref.moveCursorUp(numOrElse1());
+            editor_ref.moveCursorUp(getNumberBufferOrDefaultOne());
             break;
         case 261:
-            editor_ref.moveCursorRight(numOrElse1());
+            editor_ref.moveCursorRight(getNumberBufferOrDefaultOne());
             break;
         default:
             if (isprint(ch)) {
@@ -167,7 +167,7 @@ void InputHandler::handleCommandMode(int ch) {
     }
 }
 
-int InputHandler::numOrElse1() {
+int InputHandler::getNumberBufferOrDefaultOne() {
     if (editor_ref.getNumberBuffer().empty()) return 1;
     else return std::stoi(editor_ref.getNumberBuffer());
 }

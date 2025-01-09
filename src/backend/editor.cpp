@@ -155,10 +155,20 @@ void Editor::jumpToLine(int target_line) {
 
 // Delete the current line
 void Editor::deleteCurrentLine() {
+    // Record action for undo
+    Action action;
+    action.type = Action::DELETE;
+    action.line = cursor_y;
+    action.pos = 0;
+    action.text = std::string(buffer.getLine(cursor_y) + "\n");
+    undo_stack.push(action);
+
     buffer.deleteLine(cursor_y);
     if (cursor_y >= buffer.getLineCount()) {
         cursor_y = buffer.getLineCount() - 1; // Adjust if the cursor is beyond the last line
     }
+
+    cursor_x = 0; // Move cursor to the beginning of the line
     adjustScrolling();
     refresh_render();
 }
