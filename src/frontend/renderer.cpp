@@ -42,18 +42,16 @@ void Renderer::render(const std::vector<Buffer>& buffers, int current_buffer_ind
     clear();
     
     // Render Tab Bar if multiple buffers are open
-    if (buffers.size() > 1) {
-        renderTabBar(buffers, current_buffer_index);
-    }
+    renderTabBar(buffers, current_buffer_index);
 
     // Display line numbers and buffer lines
     const Buffer& current_buffer = buffers[current_buffer_index];
     const auto& lines = current_buffer.getLines();
-    int screen_lines = LINES - ((buffers.size() > 1) ? 2 : 1);   // Reserve space for tab bar and status bar
-    int screen_y = (buffers.size() > 1) ? 1 : 0;                 // Start from line 1 to leave space for tab bar
-    int cy_pad = 0;                                              // Additional shift of cursor_y caused by screen lines
+    int screen_lines = LINES - 1;     // Reserve space for tab bar and status bar
+    int screen_y = 1;                 // Start from line 1 to leave space for tab bar
+    int cy_pad = 0;                   // Additional shift of cursor_y caused by screen lines
 
-    for (int i = 0; i < screen_lines && i + top_line < static_cast<int>(lines.size()) && screen_y < screen_lines + ((buffers.size() > 1) ? 1 : 0); ++i) {
+    for (int i = 0; i < screen_lines && i + top_line < static_cast<int>(lines.size()) && screen_y < screen_lines + 0; ++i) {
         int logic_y = i + top_line + 1;
         // Render the line number of the logical line
         color_on(2);
@@ -64,12 +62,12 @@ void Renderer::render(const std::vector<Buffer>& buffers, int current_buffer_ind
         int line_length = logical_line.size();
         int start = 0;
         do {
-            if (start != 0 && logic_y - 1 <= cursor_y) // Cursor is in the current line
+            if (start != 0 && logic_y <= cursor_y) // Cursor is in the current line
                 ++cy_pad;
             mvprintw(screen_y, 6, "%s", logical_line.substr(start, COLS - 6).c_str());
             start += (COLS - 6);    // Skip the rendered characters
             ++screen_y;
-        } while (start < line_length && screen_y < screen_lines + ((buffers.size() > 1) ? 1 : 0));
+        } while (start < line_length && screen_y < screen_lines + 0);
     }
 
     // Display status bar
@@ -88,8 +86,8 @@ void Renderer::render(const std::vector<Buffer>& buffers, int current_buffer_ind
     // Move cursor to the correct position (limited in display area)
     int cys = cursor_x / (COLS - 6);
     int cursor_screen_x = (cursor_x % (COLS - 6)) + 6;
-    int cursor_screen_y = cursor_y - top_line + cy_pad + ((buffers.size() > 1) ? 1 : 0);
-    if (cursor_screen_y >= 0 && cursor_screen_y < screen_lines + ((buffers.size() > 1) ? 1 : 0)) {
+    int cursor_screen_y = cursor_y - top_line + cy_pad + cys + 1;
+    if (cursor_screen_y >= 0 && cursor_screen_y < screen_lines) {
         move(cursor_screen_y, cursor_screen_x); // 6 spaces for line numbers
     }
 

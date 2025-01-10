@@ -38,7 +38,7 @@ void Editor::shutdown() {
 
 // Adjust top_line for scrolling
 void Editor::adjustScrolling() {
-    int screen_lines = renderer->getScreenHeight() - ((buffers.size() > 1) ? 2 : 1); // Adjust for tab bar
+    int screen_lines = renderer->getScreenHeight() - 2; // Adjust for tab bar
 
     if (currentBuffer().getCursorY() < currentBuffer().getTopLine()) {
         // Scroll up
