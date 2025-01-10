@@ -31,6 +31,7 @@ class Editor {
     // Multi-file management
     void openFile(const std::string &fname);   // :e <fname>
     void switchBuffer(int index);              // :buffer <n>
+    void closeBuffer(int index);               // :wq
     void listBuffers();                        // :ls
 
     // Current buffer convenience

@@ -38,7 +38,7 @@ void Editor::shutdown() {
 
 // Adjust top_line for scrolling
 void Editor::adjustScrolling() {
-    int screen_lines = renderer->getScreenHeight() - 1;
+    int screen_lines = renderer->getScreenHeight() - ((buffers.size() > 1) ? 2 : 1); // Adjust for tab bar
 
     if (currentBuffer().getCursorY() < currentBuffer().getTopLine()) {
         // Scroll up
@@ -54,10 +54,11 @@ void Editor::adjustScrolling() {
 }
 
 void Editor::refresh_render() {
-    // Pull out references from the active buffer
-    Buffer& buf = currentBuffer();
-    renderer->render(buf, buf.getCursorX(), buf.getCursorY(), buf.getTopLine(),
-                     mode, buf.getFilename(), message, number_buffer);
+    // Render all buffers to include tab bar
+    renderer->render(buffers, current_buffer_index,
+                    currentBuffer().getCursorX(), currentBuffer().getCursorY(),
+                    currentBuffer().getTopLine(),
+                    mode, message, number_buffer);
 }
 
 void Editor::clear_message() {
@@ -100,13 +101,42 @@ void Editor::switchBuffer(int index) {
     }
 }
 
+void Editor::closeBuffer(int index) {
+    if (buffers.empty()) {
+        message = "No buffers to close";
+        return;
+    }
+    if (index < 0 || index >= static_cast<int>(buffers.size())) {
+        message = "Invalid buffer index";
+        return;
+    }
+
+    // Optionally, prompt to save if buffer has unsaved changes
+    // For simplicity, we'll assume buffers are saved or handle it elsewhere
+
+    buffers.erase(buffers.begin() + index);
+    message = "Buffer " + std::to_string(index + 1) + " closed";
+
+    if (current_buffer_index >= static_cast<int>(buffers.size())) {
+        current_buffer_index = buffers.size() - 1;
+    }
+
+    if (buffers.empty()) {
+        // No buffers left, shutdown editor
+        shutdown();
+        exit(0);
+    }
+
+    refresh_render();
+}
+
 // List all buffers
 void Editor::listBuffers() {
     clear_message();
-    message = "Buffers:\n";
+    message = "Buffers: ";
     for (int i = 0; i < (int)buffers.size(); ++i) {
         message +=
-            std::to_string(i + 1) + ": " + buffers[i].getFilename() + "\n";
+            std::to_string(i + 1) + ": " + buffers[i].getFilename() + " | ";
     }
     // Potentially use your renderer to display or just store in 'message'
     // We'll store in 'message' for simplicity:
@@ -250,20 +280,35 @@ void Editor::executeCommand(const std::string& command) {
     } else if (parts[0] == "w") {
         try {
             saveFile(parts.size() > 1 ? parts[1] : "");
+            message = "File saved and buffer closed";
+            closeBuffer(current_buffer_index);
         } catch (const std::runtime_error& e) {
             message = e.what();
         }
 
     } else if (parts[0] == "q") {
-        shutdown();
-        exit(0);
+        if (buffers.empty()) {
+            shutdown();
+            exit(0);
+        } else {
+            closeBuffer(current_buffer_index);
+            if (buffers.empty()) {
+                shutdown();
+                exit(0);
+            }
+        }
     }
     // process the write command with optional filename
     else if (parts[0] == "wq") {
         try {
             saveFile(parts.size() > 1 ? parts[1] : "");
-            shutdown();
-            exit(0);
+            if (!buffers.empty()) {
+                closeBuffer(current_buffer_index);
+            }
+            if (buffers.empty()) {
+                shutdown();
+                exit(0);
+            }
         } catch (const std::runtime_error& e) {
             message = e.what();
         }
@@ -291,11 +336,13 @@ void Editor::executeCommand(const std::string& command) {
 // ===--- Undo/Redo Operations ---===
 void Editor::undo() {
     currentBuffer().undo();
+    adjustScrolling();
     refresh_render();
 }
 
 void Editor::redo() {
     currentBuffer().redo();
+    adjustScrolling();
     refresh_render();
 }
 
