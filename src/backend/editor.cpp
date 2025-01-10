@@ -280,8 +280,6 @@ void Editor::executeCommand(const std::string& command) {
     } else if (parts[0] == "w") {
         try {
             saveFile(parts.size() > 1 ? parts[1] : "");
-            message = "File saved and buffer closed";
-            closeBuffer(current_buffer_index);
         } catch (const std::runtime_error& e) {
             message = e.what();
         }
