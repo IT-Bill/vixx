@@ -64,12 +64,12 @@ void Renderer::render(const std::vector<Buffer>& buffers, int current_buffer_ind
         int line_length = logical_line.size();
         int start = 0;
         do {
-            if (start != 0 && logic_y - 1 <= cursor_y) // Cursor is in the current line
+            if (start != 0 && logic_y - (buffers.size() > 1 ? 1 : 0) <= cursor_y) // Cursor is in the current line
                 ++cy_pad;
             mvprintw(screen_y, 6, "%s", logical_line.substr(start, COLS - 6).c_str());
             start += (COLS - 6);    // Skip the rendered characters
             ++screen_y;
-        } while (start < line_length && screen_y < screen_lines + ((buffers.size() > 1) ? 1 : 0));
+        } while (start < line_length && screen_y < screen_lines);
     }
 
     // Display status bar
@@ -88,7 +88,7 @@ void Renderer::render(const std::vector<Buffer>& buffers, int current_buffer_ind
     // Move cursor to the correct position (limited in display area)
     int cys = cursor_x / (COLS - 6);
     int cursor_screen_x = (cursor_x % (COLS - 6)) + 6;
-    int cursor_screen_y = cursor_y - top_line + cy_pad + ((buffers.size() > 1) ? 1 : 0);
+    int cursor_screen_y = cursor_y - top_line + cy_pad + cys + ((buffers.size() > 1) ? 1 : 0);
     if (cursor_screen_y >= 0 && cursor_screen_y < screen_lines + ((buffers.size() > 1) ? 1 : 0)) {
         move(cursor_screen_y, cursor_screen_x); // 6 spaces for line numbers
     }
