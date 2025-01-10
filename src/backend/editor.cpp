@@ -10,7 +10,7 @@
 // Constructor
 Editor::Editor()
     : mode(Mode::NORMAL), message(""), number_buffer(""),
-      current_buffer_index(0), renderer(nullptr) {
+      current_tab_index(0), renderer(nullptr) {
     initialize();
 }
 
@@ -25,6 +25,7 @@ void Editor::initialize() {
     renderer->initialize();
     // Initialize buffer with at least one empty line
     // buffer.addLine("");
+    // openTab();
 }
 
 // Shutdown the editor and renderer
@@ -36,32 +37,78 @@ void Editor::shutdown() {
     }
 }
 
-// Adjust top_line for scrolling
-void Editor::adjustScrolling() {
-    int screen_lines = renderer->getScreenHeight() - 1;
+// Open a new tab with an optional filename
+void Editor::openTab(const std::string& filename) {
+    tabs.emplace_back(filename);
+    current_tab_index = tabs.size() - 1;
+    refreshRender();
+}
 
-    if (currentBuffer().getCursorY() < currentBuffer().getTopLine()) {
-        // Scroll up
-        currentBuffer().setTopLine(currentBuffer().getCursorY());
+// Close the current tab
+void Editor::closeCurrentTab() {
+    if (tabs.empty()) return;
+
+    Tab& tab = currentTab();
+    if (tab.isModified()) {
+        message = "No write since last change (add ! to override)";
+        refreshRender();
+        return;
+    }
+
+    tabs.erase(tabs.begin() + current_tab_index);
+    if (current_tab_index >= tabs.size()) {
+        current_tab_index = tabs.size() - 1;
+    }
+
+    if (tabs.empty()) {
+        shutdown(); // Exit the editor if no tabs are open
+        exit(0);
+    }
+
+    refreshRender();
+}
+
+void Editor::switchToNextTab() {
+    if (tabs.size() <= 1) return;
+    current_tab_index = (current_tab_index + 1) % tabs.size();
+    refreshRender();
+}
+
+void Editor::switchToPreviousTab() {
+    if (tabs.size() <= 1) return;
+    current_tab_index = (current_tab_index - 1 + tabs.size()) % tabs.size();
+    refreshRender();
+}
+
+void Editor::switchToTab(int index) {
+    if (index >= 0 && index < (int)tabs.size()) {
+        current_tab_index = index;
+        refreshRender();
     } else {
-        // Scroll down
-        int new_top = currentBuffer().calculateTopLine(
-            currentBuffer().getCursorY(), renderer->getCOLS(), screen_lines);
-        if (new_top > currentBuffer().getTopLine()) {
-            currentBuffer().setTopLine(new_top);
-        }
+        message = "Invalid tab number";
+        refreshRender();
     }
 }
 
-void Editor::refresh_render() {
-    // Pull out references from the active buffer
-    Buffer& buf = currentBuffer();
-    renderer->render(buf, buf.getCursorX(), buf.getCursorY(), buf.getTopLine(),
-                     mode, buf.getFilename(), message, number_buffer);
+// List all open tabs
+void Editor::listTabs() {
+    clearMessage();
+    message = "Tabs:\n";
+    for (int i = 0; i < static_cast<int>(tabs.size()); ++i) {
+        message +=
+            std::to_string(i + 1) + ": " + tabs[i].getFilename() +
+            (tabs[i].isModified() ? " +" : "") + "\n";
+    }
+    refreshRender();
 }
 
-void Editor::clear_message() {
-    message = "";
+// Get the current tab
+Tab& Editor::currentTab() {
+    return tabs[current_tab_index];
+}
+
+const Tab& Editor::currentTab() const {
+    return tabs[current_tab_index];
 }
 
 // Mode Management
@@ -74,51 +121,77 @@ void Editor::switchMode(Mode new_mode) {
     if (mode != Mode::COMMAND) {
         renderer->clearCommandLine();
     }
-    refresh_render();
+    refreshRender();
 }
+
+// Adjust top_line for scrolling
+void Editor::adjustScrolling() {
+    int screen_lines = renderer->getScreenHeight() - 1;
+
+    if (currentTab().getCursorY() < currentTab().getTopLine()) {
+        // Scroll up
+        currentTab().setTopLine(currentTab().getCursorY());
+    } else {
+        // Scroll down
+        int new_top = currentTab().calculateTopLine(
+            currentTab().getCursorY(), renderer->getCOLS(), screen_lines);
+        if (new_top > currentTab().getTopLine()) {
+            currentTab().setTopLine(new_top);
+        }
+    }
+}
+
+void Editor::refreshRender() {
+    // Pull out references from the active buffer
+    Tab& tab = currentTab();
+    renderer->render(tab.getBuffer(), tab.getCursorX(), tab.getCursorY(), tab.getTopLine(),
+                     mode, tab.getFilename(), message, number_buffer);
+}
+
+void Editor::setMessage(const std::string& msg) {
+    message = msg;
+}
+
+void Editor::clearMessage() {
+    message = "";
+}
+
+
 
 // Create a new buffer, or load existing file
 void Editor::openFile(const std::string& fname) {
-    Buffer buf;
+    Tab tab;
     if (!fname.empty()) {
-        buf.setFilename(fname);
-        buf.loadFromFile(fname);
+        tab.setFilename(fname);
+        tab.getBuffer().loadFromFile(fname);
     }
-    buffers.push_back(buf);
-    current_buffer_index = (int)buffers.size() - 1;
-    refresh_render();
+    tabs.push_back(tab);
+    current_tab_index = (int)tabs.size() - 1;
+    refreshRender();
 }
 
 // Switch to a different buffer by index
 void Editor::switchBuffer(int index) {
-    if (index >= 0 && index < (int)buffers.size()) {
-        current_buffer_index = index;
-        refresh_render();
+    if (index >= 0 && index < (int)tabs.size()) {
+        current_tab_index = index;
+        refreshRender();
     } else {
         message = "Invalid buffer number";
-        refresh_render();
+        refreshRender();
     }
 }
 
 // List all buffers
 void Editor::listBuffers() {
-    clear_message();
+    clearMessage();
     message = "Buffers:\n";
-    for (int i = 0; i < (int)buffers.size(); ++i) {
+    for (int i = 0; i < (int)tabs.size(); ++i) {
         message +=
-            std::to_string(i + 1) + ": " + buffers[i].getFilename() + "\n";
+            std::to_string(i + 1) + ": " + tabs[i].getFilename() + "\n";
     }
     // Potentially use your renderer to display or just store in 'message'
     // We'll store in 'message' for simplicity:
-    refresh_render();
-}
-
-Buffer& Editor::currentBuffer() {
-    // Always assume currentBufferIndex >= 0
-    return buffers[current_buffer_index];
-}
-const Buffer& Editor::currentBuffer() const {
-    return buffers[current_buffer_index];
+    refreshRender();
 }
 
 std::string& Editor::getNumberBuffer() {
@@ -133,93 +206,93 @@ void Editor::clearNumberBuffer() {
 
 // Cursor Movement
 void Editor::moveCursorLeft(int t) {
-    currentBuffer().moveCursorLeft(t);
-    refresh_render();
+    currentTab().moveCursorLeft(t);
+    refreshRender();
 }
 void Editor::moveCursorRight(int t) {
-    currentBuffer().moveCursorRight(t);
-    refresh_render();
+    currentTab().moveCursorRight(t);
+    refreshRender();
 }
 void Editor::moveCursorUp(int t) {
-    currentBuffer().moveCursorUp(t);
+    currentTab().moveCursorUp(t);
     adjustScrolling();
-    refresh_render();
+    refreshRender();
 }
 void Editor::moveCursorDown(int t) {
-    currentBuffer().moveCursorDown(t);
+    currentTab().moveCursorDown(t);
     adjustScrolling();
-    refresh_render();
+    refreshRender();
 }
 
 // Jump to the beginning of the current line
 void Editor::jumpToLineStart() {
-    currentBuffer().jumpToLineStart();
-    refresh_render();
+    currentTab().jumpToLineStart();
+    refreshRender();
 }
 
 // Jump to the end of the current line
 void Editor::jumpToLineEnd() {
-    currentBuffer().jumpToLineEnd();
-    refresh_render();
+    currentTab().jumpToLineEnd();
+    refreshRender();
 }
 
 // Go to the first line with the cursor at the beginning
 void Editor::goToFirstLine() {
-    currentBuffer().goToFirstLine();
+    currentTab().goToFirstLine();
     adjustScrolling();
-    refresh_render();
+    refreshRender();
 }
 
 // Go to the last line with the cursor at the beginning
 void Editor::goToLastLine() {
-    currentBuffer().goToLastLine();
+    currentTab().goToLastLine();
     adjustScrolling();
-    refresh_render();
+    refreshRender();
 }
 
 void Editor::jumpToLine(int target_line) {
-    currentBuffer().jumpToLine(target_line);
+    currentTab().jumpToLine(target_line);
     adjustScrolling();
-    refresh_render();
+    refreshRender();
 }
 
 // Delete the current line
 void Editor::deleteCurrentLine() {
-    currentBuffer().deleteCurrentLine();
+    currentTab().deleteCurrentLine();
     adjustScrolling();
-    refresh_render();
+    refreshRender();
 }
 
 // Copy the current line
 void Editor::copyCurrentLine() {
     // Save the current line to the clipboard
-    copied_line = currentBuffer().getLine(
-        currentBuffer().getCursorY()); 
+    copied_line = currentTab().getBuffer().getLine(
+        currentTab().getCursorY()); 
 }
 
 // Paste the copied content
 void Editor::pasteContent(int t) {
-    currentBuffer().pasteContent(copied_line, t);
+    currentTab().pasteContent(copied_line, t);
     adjustScrolling();
-    refresh_render();
+    refreshRender();
 }
 
 // Insert Mode Operations
 void Editor::insertCharacter(char c) {
-    currentBuffer().insertCharacter(c);
-    refresh_render();
+    currentTab().insertCharacter(c);
+    refreshRender();
 }
 
 void Editor::handleBackspace() {
-    currentBuffer().handleBackspace();
+    currentTab().handleBackspace();
     adjustScrolling();
-    refresh_render();
+    refreshRender();
 }
 
 void Editor::handleEnter() {
-    currentBuffer().handleEnter();
+    currentTab().handleEnter();
     adjustScrolling();
-    refresh_render();
+    refreshRender();
 }
 
 // ===--- Command Execution ---===
@@ -275,9 +348,9 @@ void Editor::executeCommand(const std::string& command) {
         if (first != std::string::npos && second != std::string::npos) {
             std::string old_str = command.substr(pref + 1, first - pref - 1);
             std::string new_str = command.substr(first + 1, second - first - 1);
-            currentBuffer().replaceAll(old_str, new_str);
+            currentTab().replaceAll(old_str, new_str);
             
-            refresh_render();
+            refreshRender();
         } else {
             message = "Insufficient parameter";
         }
@@ -290,19 +363,19 @@ void Editor::executeCommand(const std::string& command) {
 
 // ===--- Undo/Redo Operations ---===
 void Editor::undo() {
-    currentBuffer().undo();
-    refresh_render();
+    currentTab().undo();
+    refreshRender();
 }
 
 void Editor::redo() {
-    currentBuffer().redo();
-    refresh_render();
+    currentTab().redo();
+    refreshRender();
 }
 
 void Editor::saveFile(const std::string& fname) {
-    currentBuffer().saveToFile(fname);
+    currentTab().getBuffer().saveToFile(fname);
     // Optionally, display a save confirmation in the status bar
-    refresh_render();
+    refreshRender();
 }
 
 // Renderer Access

@@ -8,7 +8,7 @@
 
 // Constructor
 InputHandler::InputHandler(Editor& editor) : editor_ref(editor), command_buffer("") {
-    editor_ref.refresh_render();
+    editor_ref.refreshRender();
 }
 
 // Destructor
@@ -16,7 +16,7 @@ InputHandler::~InputHandler() {}
 
 // Handle input based on current mode
 void InputHandler::handleInput(int ch) {
-    editor_ref.clear_message();
+    editor_ref.clearMessage();
     Mode current_mode = editor_ref.getMode();
     switch (current_mode) {
         case Mode::NORMAL:
@@ -54,7 +54,7 @@ void InputHandler::handleNormalMode(int ch) {
 
     if (isdigit(ch) && (!editor_ref.getNumberBuffer().empty() || ch != '0')) {   // The number_buffer cannot start with 0
         editor_ref.appendNumberBuffer(static_cast<char>(ch));
-        editor_ref.refresh_render();
+        editor_ref.refreshRender();
         return;
     }
 
@@ -107,7 +107,7 @@ void InputHandler::handleNormalMode(int ch) {
             break;
     }
     editor_ref.clearNumberBuffer();
-    editor_ref.refresh_render();
+    editor_ref.refreshRender();
 }
 
 // Handle inputs in Insert mode

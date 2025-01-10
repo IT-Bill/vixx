@@ -3,7 +3,7 @@
 #ifndef __VIXX_BACKEND_EDITOR_H__
 #define __VIXX_BACKEND_EDITOR_H__
 
-#include "backend/buffer.h"
+#include "backend/tab.h"
 #include "common/types.h"
 #include <ncurses.h>
 #include <string>
@@ -21,8 +21,17 @@ class Editor {
     void shutdown();
     void adjustScrolling();
 
-    void refresh_render();
-    void clear_message();
+    // Tab Management
+    void openTab(const std::string& fname = "");
+    void closeCurrentTab();
+    void switchToNextTab();
+    void switchToPreviousTab();
+    void switchToTab(int index);
+    void listTabs();
+    
+    // Current Tab Access
+    Tab& currentTab();
+    const Tab& currentTab() const;
 
     // Mode Management
     Mode getMode() const;
@@ -32,10 +41,6 @@ class Editor {
     void openFile(const std::string &fname);   // :e <fname>
     void switchBuffer(int index);              // :buffer <n>
     void listBuffers();                        // :ls
-
-    // Current buffer convenience
-    Buffer &currentBuffer();
-    const Buffer &currentBuffer() const;
 
     std::string& getNumberBuffer();
     void appendNumberBuffer(const char ch);
@@ -73,15 +78,17 @@ class Editor {
 
     // Renderer Access
     Renderer& getRenderer();
+    void refreshRender();
+
+    // Message Handling
+    void setMessage(const std::string& msg);
+    void clearMessage();
 
   private:
-    std::vector<Buffer> buffers;
-    int current_buffer_index;
+    std::vector<Tab> tabs;
+    int current_tab_index;
     
     Mode mode;
-
-    int window_start_line;     // Current window start line
-    int window_height;         // Current window height
 
     std::string number_buffer; // To record digitally-guided commands
     std::string copied_line;

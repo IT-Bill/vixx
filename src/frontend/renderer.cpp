@@ -61,11 +61,13 @@ void Renderer::render(const Buffer& buffer, int cursor_x, int cursor_y, int top_
         } while (start < line_length && screen_y < screen_lines);
     }
 
+    std::string mode_str = (mode == Mode::NORMAL) ? "-- NORMAL --" : 
+                           (mode == Mode::INSERT) ? ">> INSERT <<" : ":: COMMAND ::";
+
     // Display status bar
     displayStatusBar(
-        (mode == Mode::NORMAL) ? "-- NORMAL --" : 
-        (mode == Mode::INSERT) ? ">> INSERT <<" : ":: COMMAND ::",
-        filename.empty() ? "[No Name]" : "\""  +filename+"\", " + std::to_string(lines.size())+"L",
+        mode_str,
+        filename.empty() ? "[No Name]" : "\"" + filename + "\", " + std::to_string(lines.size()) + "L",
         message,
         number_buffer,
         "("+std::to_string(cursor_y + 1)+", " + std::to_string(cursor_x + 1)+")"
