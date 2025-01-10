@@ -21,6 +21,7 @@ bool Buffer::loadFromFile(const std::string& filename) {
     lines.clear(); // Clear existing content
     std::string line;
     while (std::getline(file, line)) {
+        line.pop_back();
         lines.emplace_back(line);
     }
 
