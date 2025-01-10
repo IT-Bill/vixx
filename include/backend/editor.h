@@ -62,6 +62,7 @@ class Editor {
 
     // Command Execution
     void executeCommand(const std::string& command);
+    void executeOpenFileCommand(const std::string& fname);
 
     // Undo/Redo Operations
     void undo();

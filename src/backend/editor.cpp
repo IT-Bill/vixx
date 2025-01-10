@@ -222,7 +222,7 @@ void Editor::handleEnter() {
     refresh_render();
 }
 
-// Command Execution
+// ===--- Command Execution ---===
 void Editor::executeCommand(const std::string& command) {
     // split the command into parts
     std::vector<std::string> parts = split(command, 2);
@@ -255,7 +255,6 @@ void Editor::executeCommand(const std::string& command) {
         }
 
     } else if (parts[0] == "q") {
-        
         shutdown();
         exit(0);
     }
@@ -289,7 +288,7 @@ void Editor::executeCommand(const std::string& command) {
     
 }
 
-// Undo/Redo Operations
+// ===--- Undo/Redo Operations ---===
 void Editor::undo() {
     currentBuffer().undo();
     refresh_render();

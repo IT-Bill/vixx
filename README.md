@@ -48,6 +48,7 @@ This project aims to implement a lightweight version of the Vim text editor in C
 - **Key Functionalities**:
   - Commands include:
     - `:w`: Save the current file.
+      - If no file name specified when running `vixx`, you need to use `:w <filename>` to specify a filename.
     - `:q`: Quit the editor.
     - `:wq`: Save and quit.
 
