@@ -82,7 +82,7 @@ This program can correctly deal with a line of text that is too long, and it can
 ## How to Use Vixx
 
 1. **Launch the Editor**:
-   - Open the terminal and run the program by `vixx [filePath]`.
+   - Open the terminal and run the program by `vixx <filePath>`.
 2. **Program Window**:
 ![Program Window](doc/fig1.png)
    - The yellow numbers in the left column are line numbers.
