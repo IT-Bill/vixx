@@ -1,5 +1,5 @@
-#ifndef BUFFER_H
-#define BUFFER_H
+#ifndef __VIXX_BACKEND_BUFFER_H__
+#define __VIXX_BACKEND_BUFFER_H__
 
 #include "common/types.h"
 #include <string>
@@ -88,4 +88,4 @@ class Buffer {
     void ensureCursorWithinBounds();
 };
 
-#endif // BUFFER_H
+#endif // __VIXX_BACKEND_BUFFER_H__

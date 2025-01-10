@@ -1,7 +1,7 @@
 // include/backend/editor.h
 
-#ifndef EDITOR_H
-#define EDITOR_H
+#ifndef __VIXX_BACKEND_EDITOR_H__
+#define __VIXX_BACKEND_EDITOR_H__
 
 #include "backend/buffer.h"
 #include "common/types.h"
@@ -93,4 +93,4 @@ class Editor {
     
 };
 
-#endif // EDITOR_H
+#endif // __VIXX_BACKEND_EDITOR_H__

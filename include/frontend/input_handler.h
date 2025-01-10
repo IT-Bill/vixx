@@ -1,7 +1,7 @@
 // include/frontend/input_handler.h
 
-#ifndef INPUT_HANDLER_H
-#define INPUT_HANDLER_H
+#ifndef __VIXX_FRONTEND_INPUT_HANDLER_H__
+#define __VIXX_FRONTEND_INPUT_HANDLER_H__
 
 #include <string>
 
@@ -24,4 +24,4 @@ class InputHandler {
     int getNumberBufferOrDefaultOne();
 };
 
-#endif // INPUT_HANDLER_H
+#endif // __VIXX_FRONTEND_INPUT_HANDLER_H__

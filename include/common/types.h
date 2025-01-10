@@ -1,7 +1,7 @@
 // include/common/types.h
 
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef __VIXX_BACKEND_TYPES_H__
+#define __VIXX_BACKEND_TYPES_H__
 
 #include <string>
 #include <vector>
@@ -33,4 +33,4 @@ struct Action {
     std::vector<ReplaceLine> replaceLines;
 };
 
-#endif // TYPES_H
+#endif // __VIXX_BACKEND_TYPES_H__

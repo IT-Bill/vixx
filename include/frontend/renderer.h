@@ -1,7 +1,7 @@
 // include/frontend/renderer.h
 
-#ifndef RENDERER_H
-#define RENDERER_H
+#ifndef __VIXX_FRONTEND_RENDERER_H__
+#define __VIXX_FRONTEND_RENDERER_H__
 
 #include "backend/buffer.h"
 #include "common/types.h"
@@ -34,4 +34,4 @@ class Renderer {
     bool colors_initialized;
 };
 
-#endif // RENDERER_H
+#endif // __VIXX_FRONTEND_RENDERER_H__
