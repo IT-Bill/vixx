@@ -75,7 +75,9 @@ This program can correctly deal with a line of text that is too long, and it can
 
 #### (5) Multi-File Editing (TODO)
 - **Feature**: Open multiple files simultaneously.
-- **Usage**: Seamlessly switch between files for editing.
+- **Commands**:
+  - `:e <filePath>`: Open the file in a new tab.
+  - `:b <num>`: Switch to the num-th file in tabs for editing.
 
 ---
 
