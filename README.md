@@ -73,7 +73,7 @@ This program can correctly deal with a line of text that is too long, and it can
   - `u`: Undo the last action.
   - `Ctrl+R`: Redo the last undone action.
 
-#### (5) Multi-File Editing (TODO)
+#### (5) Multi-File Editing
 - **Feature**: Open multiple files simultaneously.
 - **Commands**:
   - `:e <filePath>`: Open the file in a new tab.
