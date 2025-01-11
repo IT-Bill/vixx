@@ -21,7 +21,7 @@ This project aims to implement a lightweight version of the Vim text editor in C
 - **Key Functionalities**:
   - **Cursor Movement**:
     - `h`, `j`, `k`, `l`: Move cursor left, down, up, and right.
-    - `←`, `↓`, `↑`, `→`(Arrey keys): Move cursor left, down, up, and right.
+    - `←`, `↓`, `↑`, `→`(Arrow keys): Move cursor left, down, up, and right.
     - `0`: Jump to the beginning of the current line.
     - `$`: Jump to the end of the current line.
     - `gg`: Move to the first line.
@@ -36,7 +36,7 @@ This project aims to implement a lightweight version of the Vim text editor in C
 #### Insert Mode
 - **Purpose**: Allows direct text entry like traditional editors.
 - **Cursor Movement**:
-  - `←`, `↓`, `↑`, `→`(Arrey keys): Move cursor left, down, up, and right.
+  - `←`, `↓`, `↑`, `→`(Arrow keys): Move cursor left, down, up, and right.
 - **Key Functionalities**:
   - Supports real-time text input with the cursor following the text.
   - `Enter`: Create a new line from the cursor and move the cursor to its beginning.
@@ -51,6 +51,7 @@ This project aims to implement a lightweight version of the Vim text editor in C
       - If no file name specified when running `vixx`, you need to use `:w <filename>` to specify a filename.
     - `:q`: Quit the editor.
     - `:wq`: Save and quit.
+  - Press `Esc` to return to **Normal Mode**.
 
 This program can correctly deal with a line of text that is too long, and it can correctly deal with columns that are overflow the scope of the window.  When user moving the cursor, the text in the window automatically scrolls to the area where the cursor is located.
 
@@ -60,10 +61,10 @@ This program can correctly deal with a line of text that is too long, and it can
 
 #### (1) Line Numbers and Navigation
 - **Feature**: Display line numbers for reference.
-- **Command**: [line_number]+`G`. For example, `12G` will move the cursor to line 12.
+- **Command**: `[line_number]`+`G`. For example, `12G` will move the cursor to line 12.
 
 #### (2) Repetitive Cursor Movement
-- **Command**: [number]+[arrow_key]. For example, `5→` will move the cursor 5 characters to the right.
+- **Command**: `[number]`+`[arrow_key]`. For example, `5→` will move the cursor 5 characters to the right.
 
 #### (3) Search and Replace
 - **Command**: `:s/old/new/g`: Replace all occurrences of `old` with `new` in the text.
@@ -87,11 +88,12 @@ This program can correctly deal with a line of text that is too long, and it can
    - Open the terminal and run the program by `vixx <filePath>`.
 2. **Program Window**:
 ![Program Window](doc/fig1.png)
-   - The yellow numbers in the left column are line numbers.
-   - The white text in the middle is the text content.
-   - The green text on the left side of the bottom row indicates the Mode and the position of cursor.
-   - The light blue number in the middle of the bottom row is the Normal numeric control record.
-   - The blue text on the right side of the bottom row gives the file name, relative path, and total number of lines.
+  - The top line shows all open file tabs, with the highlighted tabs for the current edit file.
+   - The **yellow numbers** in the left column are line numbers.
+   - The **white text** in the middle is the text content.
+   - The **green text** on the left side of the bottom line indicates the Mode and the position of cursor.
+   - The **light blue number** in the middle of the bottom line is the Normal numeric control record.
+   - The **blue text** on the right side of the bottom line gives the file name, relative path, and total number of lines.
 3. **Command-Mode Input**:
 ![Program Window](doc/fig2.png)
    - When typing in command mode, the bottom line is temporarily replaced with light blue command input.
